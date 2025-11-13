@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://172.17.44.85.:5004/api/v1";
+const API_BASE_URL = "https://stockmaster.babydatingx.in/api/v1";
 
 const api = axios.create({
   baseURL: API_BASE_URL,

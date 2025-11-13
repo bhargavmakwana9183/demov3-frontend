@@ -10,7 +10,7 @@ import { io } from "socket.io-client";
 const CurrentPositions = () => {
   const dispatch = useAppDispatch();``
   const { positions, loading } = useAppSelector((state) => state.position);
-  const SOCKET_URL = "http://172.17.44.85.:5004";
+  const SOCKET_URL = "https://stockmaster.babydatingx.in";
 
   useEffect(() => {
     dispatch(fetchCurrentPositions());
