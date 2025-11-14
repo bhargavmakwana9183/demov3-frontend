@@ -60,6 +60,7 @@ const StockList = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Symbol</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead>Name</TableHead>
               {/* <TableHead>Buy Price</TableHead> */}
               <TableHead>Current LTP</TableHead>
@@ -72,6 +73,7 @@ const StockList = () => {
             {stocks.map((stock) => (
               <TableRow key={stock.id}>
                 <TableCell className="font-medium">{stock.trading_symbol}</TableCell>
+                <TableCell>{stock.instrument_type}</TableCell>
                 <TableCell>{stock.name}</TableCell>
                 {/* <TableCell>₹{stock.buyPrice}</TableCell> */}
                 <TableCell>₹{stock.ltp}</TableCell>

@@ -9,6 +9,7 @@ export interface Stock {
   ltp: number;
   lot_size: number;
   is_active: boolean;
+  instrument_type: string;
 }
 
 interface StockState {
