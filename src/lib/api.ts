@@ -47,6 +47,8 @@ export const dashboardAPI = {
 export const stockAPI = {
   getStocks: (page: number = 1, limit: number = 10) =>
     api.get(`/instrument/stock-list?pageIndex=${page}&pageSize=${limit}`),
+  makeasActive: (id: string) =>
+    api.get(`/instrument/strike-active-deactive/${id}`),
   placeOrder: (data: {
     stockId: string;
     type: "buy" | "sell";

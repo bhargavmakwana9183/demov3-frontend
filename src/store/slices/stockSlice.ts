@@ -8,6 +8,7 @@ export interface Stock {
   buyPrice: number;
   ltp: number;
   lot_size: number;
+  is_active: boolean;
 }
 
 interface StockState {
@@ -32,6 +33,13 @@ export const fetchStocks = createAsyncThunk(
   "stock/fetchStocks",
   async ({ page, limit }: { page: number; limit: number }) => {
     const response = await stockAPI.getStocks(page, limit);
+    return response.data;
+  }
+);
+export const makeAsActiveStocks = createAsyncThunk(
+  "stock/makeAsActiveStocks",
+  async ({ id }: { id: string }) => {
+    const response = await stockAPI.makeasActive(id);
     return response.data;
   }
 );
@@ -80,6 +88,15 @@ const stockSlice = createSlice({
       })
       .addCase(placeOrder.rejected, (state) => {
         state.orderPlacing = false;
+      })
+      .addCase(makeAsActiveStocks.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(makeAsActiveStocks.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(makeAsActiveStocks.rejected, (state) => {
+        state.loading = false;
       });
   },
 });

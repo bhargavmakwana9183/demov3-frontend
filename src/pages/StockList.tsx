@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchStocks, setPage } from '@/store/slices/stockSlice';
+import { fetchStocks, makeAsActiveStocks, setPage } from '@/store/slices/stockSlice';
 import {
   Table,
   TableBody,
@@ -33,6 +33,10 @@ const StockList = () => {
     setSelectedStock(stock);
     setOrderModalOpen(true);
   };
+  const handleMakeActive = (id: string) => {
+    dispatch(makeAsActiveStocks({ id }));
+    dispatch(fetchStocks({ page, limit }));
+  };
 
   const handlePageChange = (newPage: number) => {
     dispatch(setPage(newPage));
@@ -60,7 +64,7 @@ const StockList = () => {
               {/* <TableHead>Buy Price</TableHead> */}
               <TableHead>Current LTP</TableHead>
               <TableHead>Quantity</TableHead>
-              {/* <TableHead>Status</TableHead> */}
+              <TableHead>Status</TableHead>
               <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
@@ -72,11 +76,25 @@ const StockList = () => {
                 {/* <TableCell>₹{stock.buyPrice}</TableCell> */}
                 <TableCell>₹{stock.ltp}</TableCell>
                 <TableCell>{stock.lot_size}</TableCell>
-                {/* <TableCell>
-                  <Badge variant={stock.status === 'active' ? 'default' : 'secondary'}>
-                    {stock.status}
-                  </Badge>
-                </TableCell> */}
+                <TableCell>
+
+                  {
+                    stock.is_active?<Button
+                    size="sm"
+                    disabled
+                  >
+                  Active
+                  </Button>:<Button
+                    size="sm"
+                    onClick={() => handleMakeActive(stock.id)}
+                  >
+                  Make as Active
+                  </Button>
+
+                  }
+
+                 
+                </TableCell>
                 <TableCell>
                   <Button
                     size="sm"
