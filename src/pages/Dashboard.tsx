@@ -19,7 +19,10 @@ const Dashboard = () => {
 
   const handleGenerateToken = async () => {
     try {
-      await dispatch(generateToken()).unwrap();
+      // await dispatch(generateToken()).unwrap();
+      window.open(
+      "https://api-v2.upstox.com//login/authorization/dialog?client_id=f12aa6f2-c2f2-42d4-b57e-8bdbde050da1&redirect_uri=https://stockmaster.babydatingx.in/api/v1/stock"
+    ),
       toast.success('Trading token generated successfully!');
     } catch (error) {
       toast.error('Failed to generate token');
