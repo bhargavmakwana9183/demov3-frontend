@@ -70,6 +70,14 @@ const CurrentPositions = () => {
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
+                  <p className="text-muted-foreground">Strategy</p>
+                  <p className="font-medium">{position.strategy_name}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Trade Time</p>
+                  <p className="font-medium"> {new Date(position.trade_time).toLocaleString()}</p>
+                </div>
+                <div>
                   <p className="text-muted-foreground">Buy Price</p>
                   <p className="font-medium">₹{position.buyPrice?.toFixed(2)}</p>
                 </div>

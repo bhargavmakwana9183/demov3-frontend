@@ -13,6 +13,8 @@ export interface Position {
   sellPrice: number;
   target: number;
   stopploss: number;
+  strategy_name: string;
+  trade_time: string;
 }
 
 interface PositionState {
