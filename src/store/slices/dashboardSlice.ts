@@ -5,6 +5,7 @@ interface DashboardStats {
   monthlyProfitLoss: number;
   accountBalance: number;
   totalTrades: number;
+  tralling_pl: number;
 }
 
 interface ChartData {

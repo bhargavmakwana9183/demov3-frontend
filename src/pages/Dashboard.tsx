@@ -62,6 +62,13 @@ const Dashboard = () => {
           subtitle="Current month performance"
         />
         <StatCard
+          title="Monthly Tralling Profit/Loss"
+          value={`₹${stats?.tralling_pl?.toFixed(2) || '0.00'}`}
+          icon={TrendingUp}
+          trend={profitLossTrend}
+          subtitle="Current month performance"
+        />
+        <StatCard
           title="Account Balance"
           value={`₹${stats?.accountBalance?.toFixed(2) || '0.00'}`}
           icon={DollarSign}
