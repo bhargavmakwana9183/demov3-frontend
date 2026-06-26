@@ -47,20 +47,22 @@ export const PlaceOrderModal = ({ open, onOpenChange, stock }: PlaceOrderModalPr
       onOpenChange(false);
       setQuantity('');
       setPrice('');
-    } catch (error) {
+    } catch {
       toast.error('Failed to place order');
     }
   };
 
   if (!stock) return null;
 
+  const ltp = Number(stock.ltp) || 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-card border-border">
         <DialogHeader>
-          <DialogTitle>Place Order - {stock.symbol}</DialogTitle>
+          <DialogTitle>Place Order - {stock.trading_symbol}</DialogTitle>
           <DialogDescription>
-            Current LTP: ₹{stock.currentLTP.toFixed(2)}
+            Current LTP: ₹{ltp.toFixed(2)}
           </DialogDescription>
         </DialogHeader>
 

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { authAPI } from "@/lib/api";
+import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "@/lib/config";
 
 interface User {
   id: string;
@@ -16,32 +17,70 @@ interface AuthState {
   error: string | null;
 }
 
+const loadStoredUser = (): User | null => {
+  try {
+    const raw = localStorage.getItem(AUTH_USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 const initialState: AuthState = {
-  user: null,
-  token: localStorage.getItem("authToken"),
-  isAuthenticated: !!localStorage.getItem("authToken"),
+  user: loadStoredUser(),
+  token: localStorage.getItem(AUTH_TOKEN_KEY),
+  isAuthenticated: !!localStorage.getItem(AUTH_TOKEN_KEY),
   loading: false,
   error: null,
 };
+
+const buildUserFromLogin = (data: {
+  id: string;
+  email: string;
+}): User => ({
+  id: String(data.id),
+  email: data.email,
+  name: data.email?.split("@")[0] || "User",
+});
 
 export const login = createAsyncThunk(
   "auth/login",
   async ({ email, password }: { email: string; password: string }) => {
     const response = await authAPI.login(email, password);
-    localStorage.setItem("authToken", response.data?.data.token);
-    return response.data;
-  }
+    const data = response.data?.data;
+    if (!data?.token) {
+      throw new Error("Invalid login response");
+    }
+    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+    const user = buildUserFromLogin(data);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+    return { token: data.token, user };
+  },
 );
 
 export const logout = createAsyncThunk("auth/logout", async () => {
-  await authAPI.logout();
-  localStorage.removeItem("authToken");
+  try {
+    await authAPI.logout();
+  } catch {
+    // Backend may not expose /auth/logout — always clear client session
+  }
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(AUTH_USER_KEY);
 });
 
-export const fetchProfile = createAsyncThunk("auth/fetchProfile", async () => {
-  const response = await authAPI.getProfile();
-  return response.data;
-});
+export const fetchProfile = createAsyncThunk(
+  "auth/fetchProfile",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.getProfile();
+      const profile = response.data?.data ?? response.data;
+      if (!profile) return rejectWithValue("No profile data");
+      return profile as User;
+    } catch {
+      return rejectWithValue("Profile endpoint unavailable");
+    }
+  },
+);
 
 const authSlice = createSlice({
   name: "auth",
@@ -70,6 +109,7 @@ const authSlice = createSlice({
       })
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.user = action.payload;
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(action.payload));
       });
   },
 });

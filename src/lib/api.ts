@@ -1,6 +1,5 @@
 import axios from "axios";
-
-const API_BASE_URL = "https://stockmaster.babydatingx.in/api/v1";
+import { API_BASE_URL, AUTH_TOKEN_KEY } from "./config";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -9,31 +8,31 @@ const api = axios.create({
   },
 });
 
-// Request interceptor for adding auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error),
 );
 
-// Response interceptor for handling errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("authToken");
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem("authUser");
       window.location.href = "/login";
     }
     return Promise.reject(error);
-  }
+  },
 );
+
+export const getApiData = <T>(response: { data: { data: T } }): T =>
+  response.data.data;
 
 // Dashboard APIs
 export const dashboardAPI = {
@@ -59,15 +58,24 @@ export const stockAPI = {
 
 // Position APIs
 export const positionAPI = {
-  getCurrentPositions: () => api.get("/instrument/current-postions"),
+  getCurrentPositions: (params?: {
+    strategy_name?: string;
+    active_only?: boolean;
+  }) => api.get("/instrument/current-postions", { params }),
 };
 
 // Trade History APIs
 export const tradeHistoryAPI = {
-  getHistory: (fromDate?: string, toDate?: string) => {
+  getHistory: (options?: {
+    fromDate?: string;
+    toDate?: string;
+    strategy_name?: string;
+  }) => {
     const params = new URLSearchParams();
-    if (fromDate) params.append("fromDate", fromDate);
-    if (toDate) params.append("toDate", toDate);
+    if (options?.fromDate) params.append("fromDate", options.fromDate);
+    if (options?.toDate) params.append("toDate", options.toDate);
+    if (options?.strategy_name)
+      params.append("strategy_name", options.strategy_name);
     return api.get(`/instrument/trade-history-list?${params.toString()}`);
   },
 };
@@ -78,6 +86,44 @@ export const authAPI = {
     api.post("/stock/login", { data: { email, password } }),
   logout: () => api.post("/auth/logout"),
   getProfile: () => api.get("/auth/profile"),
+};
+
+// Scalping APIs
+export const scalpingAPI = {
+  getPerformance: (days: number = 30, strategyName: string = "SCALLPING") =>
+    api.get("/instrument/scalping-performance", {
+      params: { days, strategy_name: strategyName },
+    }),
+  getStatus: () => api.get("/instrument/scalping-status"),
+  getStrategyConfig: (strategyName: string = "SCALLPING") =>
+    api.get("/instrument/strategy-config", {
+      params: { strategy_name: strategyName },
+    }),
+  updateStrategyConfig: (payload: {
+    mode?: "paper" | "live" | "backtest";
+    strategy_name?: string;
+  }) => api.patch("/instrument/strategy-config", payload),
+  toggleLiveTrading: () =>
+    api.get("/instrument/upstocks-order-place-toggle"),
+  getAuditLog: (params: {
+    days?: number;
+    action?: string;
+    limit?: number;
+  }) =>
+    api.get("/instrument/scalping-audit-log", { params }),
+  runBacktest: (body: {
+    startDate: string;
+    endDate: string;
+    signalType?: "CE" | "PE";
+    instrumentType?: "CE" | "PE";
+  }) => api.post("/instrument/scalping-backtest", body),
+  runOptimize: (body: {
+    days?: number;
+    signalType?: "CE" | "PE";
+    instrumentType?: "CE" | "PE";
+    applyBest?: boolean;
+    params?: string;
+  }) => api.post("/instrument/scalping-optimize", body),
 };
 
 export default api;

@@ -11,6 +11,9 @@ import Dashboard from "./pages/Dashboard";
 import StockList from "./pages/StockList";
 import CurrentPositions from "./pages/CurrentPositions";
 import TradeHistory from "./pages/TradeHistory";
+import ScalpingOverview from "./pages/ScalpingOverview";
+import ScalpingAuditLog from "./pages/ScalpingAuditLog";
+import ScalpingBacktest from "./pages/ScalpingBacktest";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +38,9 @@ const App = () => (
             >
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="scalping" element={<ScalpingOverview />} />
+              <Route path="scalping/audit" element={<ScalpingAuditLog />} />
+              <Route path="scalping/backtest" element={<ScalpingBacktest />} />
               <Route path="stocks" element={<StockList />} />
               <Route path="positions" element={<CurrentPositions />} />
               <Route path="history" element={<TradeHistory />} />

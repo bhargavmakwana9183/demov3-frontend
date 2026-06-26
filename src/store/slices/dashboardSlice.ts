@@ -17,6 +17,8 @@ interface DashboardState {
   stats: DashboardStats | null;
   chartData: ChartData[];
   loading: boolean;
+  chartLoading: boolean;
+  chartError: string | null;
   error: string | null;
   tokenGenerating: boolean;
 }
@@ -25,6 +27,8 @@ const initialState: DashboardState = {
   stats: null,
   chartData: [],
   loading: false,
+  chartLoading: false,
+  chartError: null,
   error: null,
   tokenGenerating: false,
 };
@@ -34,7 +38,7 @@ export const fetchDashboardStats = createAsyncThunk(
   async () => {
     const response = await dashboardAPI.getStats();
     return response.data;
-  }
+  },
 );
 
 export const fetchProfitLossChart = createAsyncThunk(
@@ -42,7 +46,7 @@ export const fetchProfitLossChart = createAsyncThunk(
   async (period: string = "month") => {
     const response = await dashboardAPI.getProfitLossChart(period);
     return response.data;
-  }
+  },
 );
 
 export const generateToken = createAsyncThunk(
@@ -50,7 +54,7 @@ export const generateToken = createAsyncThunk(
   async () => {
     const response = await dashboardAPI.generateToken();
     return response.data;
-  }
+  },
 );
 
 const dashboardSlice = createSlice({
@@ -71,8 +75,21 @@ const dashboardSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || "Failed to fetch dashboard stats";
       })
+      .addCase(fetchProfitLossChart.pending, (state) => {
+        state.chartLoading = true;
+        state.chartError = null;
+      })
       .addCase(fetchProfitLossChart.fulfilled, (state, action) => {
-        state.chartData = action.payload;
+        state.chartLoading = false;
+        const payload = action.payload;
+        state.chartData = Array.isArray(payload)
+          ? payload
+          : (payload?.data ?? []);
+      })
+      .addCase(fetchProfitLossChart.rejected, (state) => {
+        state.chartLoading = false;
+        state.chartData = [];
+        state.chartError = "Chart data unavailable";
       })
       .addCase(generateToken.pending, (state) => {
         state.tokenGenerating = true;

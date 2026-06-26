@@ -1,11 +1,12 @@
 import { NavLink } from '@/components/NavLink';
-import { LayoutDashboard, TrendingUp, Briefcase, History, Menu } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, Briefcase, History, Menu, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
   { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { title: 'Scalping', path: '/scalping', icon: Zap },
   { title: 'Stock List', path: '/stocks', icon: TrendingUp },
   { title: 'Current Positions', path: '/positions', icon: Briefcase },
   { title: 'Trade History', path: '/history', icon: History },

@@ -1,24 +1,34 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { tradeHistoryAPI } from "@/lib/api";
+import {
+  StrategyFilterValue,
+  strategyQueryParam,
+} from "@/lib/tradeFormat";
 
 export interface Trade {
   id: string;
   date: string;
   symbol: string;
+  strategy_name?: string;
+  instrument_type?: string;
   buyPrice: number;
   sellPrice: number;
   quantity: number;
   profitLoss: number;
+  netPl: number;
+  charges: number;
   duration: string;
   stopplose: number;
   target: number;
-  status: "closed" | "exited";
+  exit_reason?: string | null;
+  status: string;
 }
 
 interface TradeHistoryState {
   trades: Trade[];
   loading: boolean;
   error: string | null;
+  strategyFilter: StrategyFilterValue;
   dateRange: {
     from: string | null;
     to: string | null;
@@ -29,6 +39,7 @@ const initialState: TradeHistoryState = {
   trades: [],
   loading: false,
   error: null,
+  strategyFilter: "SCALLPING",
   dateRange: {
     from: null,
     to: null,
@@ -37,18 +48,39 @@ const initialState: TradeHistoryState = {
 
 export const fetchTradeHistory = createAsyncThunk(
   "tradeHistory/fetch",
-  async ({ fromDate, toDate }: { fromDate?: string; toDate?: string }) => {
-    const response = await tradeHistoryAPI.getHistory(fromDate, toDate);
+  async ({
+    fromDate,
+    toDate,
+    strategyFilter,
+  }: {
+    fromDate?: string;
+    toDate?: string;
+    strategyFilter: StrategyFilterValue;
+  }) => {
+    const response = await tradeHistoryAPI.getHistory({
+      fromDate,
+      toDate,
+      strategy_name: strategyQueryParam(strategyFilter),
+    });
     return response.data;
-  }
+  },
 );
 
 const tradeHistorySlice = createSlice({
   name: "tradeHistory",
   initialState,
   reducers: {
-    setDateRange: (state, action) => {
+    setDateRange: (
+      state,
+      action: PayloadAction<{ from: string; to: string }>,
+    ) => {
       state.dateRange = action.payload;
+    },
+    setHistoryStrategyFilter: (
+      state,
+      action: PayloadAction<StrategyFilterValue>,
+    ) => {
+      state.strategyFilter = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -68,5 +100,6 @@ const tradeHistorySlice = createSlice({
   },
 });
 
-export const { setDateRange } = tradeHistorySlice.actions;
+export const { setDateRange, setHistoryStrategyFilter } =
+  tradeHistorySlice.actions;
 export default tradeHistorySlice.reducer;

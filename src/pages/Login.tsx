@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { login } from '@/store/slices/authSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,9 +12,16 @@ import { TrendingUp } from 'lucide-react';
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +31,7 @@ const Login = () => {
       await dispatch(login({ email, password })).unwrap();
       toast.success('Login successful!');
       navigate('/dashboard');
-    } catch (error) {
+    } catch {
       toast.error('Invalid credentials');
     } finally {
       setLoading(false);
