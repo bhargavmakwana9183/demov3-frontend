@@ -76,7 +76,7 @@ const CurrentPositions = () => {
   }
 
   const scalpingCount = positions.filter(
-    (p) => p.strategy_name === 'SCALLPING',
+    (p) => p.strategy_name === 'NIFTY_OPTIONS_SCALP',
   ).length;
 
   return (
@@ -85,10 +85,10 @@ const CurrentPositions = () => {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Current Positions</h1>
           <p className="text-sm text-muted-foreground">
-            Live updates via WebSocket · {positions.length} position
-            {positions.length !== 1 ? 's' : ''} today
-            {strategyFilter === 'SCALLPING' && scalpingCount > 0
-              ? ` (${scalpingCount} SCALLPING)`
+            Nifty 50 scalper positions · live via WebSocket · {positions.length}{' '}
+            position{positions.length !== 1 ? 's' : ''} today
+            {strategyFilter === 'NIFTY_OPTIONS_SCALP' && scalpingCount > 0
+              ? ` (${scalpingCount} Nifty)`
               : ''}
           </p>
         </div>
@@ -116,7 +116,7 @@ const CurrentPositions = () => {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {positions.map((position) => {
-          const isScalping = position.strategy_name === 'SCALLPING';
+          const isScalping = position.strategy_name === 'NIFTY_OPTIONS_SCALP';
           const displayPl = position.netPl ?? position.profitLoss;
 
           return (

@@ -49,7 +49,7 @@ const TradeHistory = () => {
       fetchTradeHistory({
         fromDate: fromDateStr,
         toDate: toDateStr,
-        strategyFilter: 'SCALLPING',
+        strategyFilter: 'NIFTY_OPTIONS_SCALP',
       }),
     );
     dispatch(setDateRange({ from: fromDateStr, to: toDateStr }));
@@ -85,7 +85,7 @@ const TradeHistory = () => {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Trade History</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {trades.length} trades · Net P/L{' '}
+            Nifty 50 scalper trades · {trades.length} shown · Net P/L{' '}
             <span
               className={cn(
                 'font-medium',

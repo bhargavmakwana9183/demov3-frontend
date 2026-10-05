@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchStocks, makeAsActiveStocks, setPage } from '@/store/slices/stockSlice';
+import { fetchStocks, setPage } from '@/store/slices/stockSlice';
 import {
   Table,
   TableBody,
@@ -11,38 +11,43 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PlaceOrderModal } from '@/components/Stocks/PlaceOrderModal';
-import { Stock } from '@/store/slices/stockSlice';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+import { stockAPI } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
 const StockList = () => {
   const dispatch = useAppDispatch();
   const { stocks, total, page, loading } = useAppSelector((state) => state.stock);
-  const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
-  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
-  const limit = 10;
-  const totalPages = Math.ceil(total / limit);
+  const limit = 20;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   useEffect(() => {
     dispatch(fetchStocks({ page, limit }));
   }, [dispatch, page]);
 
-  const handlePlaceOrder = (stock: Stock) => {
-    setSelectedStock(stock);
-    setOrderModalOpen(true);
-  };
-  const handleMakeActive = (id: string) => {
-    dispatch(makeAsActiveStocks({ id }));
-    dispatch(fetchStocks({ page, limit }));
-  };
-
   const handlePageChange = (newPage: number) => {
     dispatch(setPage(newPage));
   };
 
-  if (loading) {
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      await stockAPI.syncNiftyChain();
+      await stockAPI.syncNiftyHedging();
+      toast.success('Nifty option chain & hedging synced');
+      dispatch(fetchStocks({ page, limit }));
+    } catch {
+      toast.error('Sync failed — check Upstox token');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  if (loading && stocks.length === 0) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-64" />
@@ -53,7 +58,18 @@ const StockList = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-foreground">Stock List</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Nifty 50 Options</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Live hedging universe for the Nifty Options Scalper
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing}>
+          <RefreshCw className={cn('h-4 w-4 mr-2', syncing && 'animate-spin')} />
+          Sync Nifty Chain
+        </Button>
+      </div>
 
       <div className="bg-card border border-border rounded-lg overflow-hidden">
         <Table>
@@ -61,59 +77,50 @@ const StockList = () => {
             <TableRow>
               <TableHead>Symbol</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>Name</TableHead>
-              {/* <TableHead>Buy Price</TableHead> */}
-              <TableHead>Current LTP</TableHead>
-              <TableHead>Quantity</TableHead>
+              <TableHead>Strike</TableHead>
+              <TableHead>Expiry</TableHead>
+              <TableHead>LTP</TableHead>
+              <TableHead>Lot</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {stocks.map((stock) => (
               <TableRow key={stock.id}>
                 <TableCell className="font-medium">{stock.trading_symbol}</TableCell>
-                <TableCell>{stock.instrument_type}</TableCell>
-                <TableCell>{stock.name}</TableCell>
-                {/* <TableCell>₹{stock.buyPrice}</TableCell> */}
-                <TableCell>₹{stock.ltp}</TableCell>
+                <TableCell>
+                  <Badge variant={stock.instrument_type === 'CE' ? 'default' : 'secondary'}>
+                    {stock.instrument_type}
+                  </Badge>
+                </TableCell>
+                <TableCell>{(stock as { strike_price?: number }).strike_price ?? '—'}</TableCell>
+                <TableCell className="text-sm">
+                  {(stock as { expiry?: string }).expiry
+                    ? new Date((stock as { expiry?: string }).expiry!).toLocaleDateString()
+                    : '—'}
+                </TableCell>
+                <TableCell>₹{Number(stock.ltp || 0).toFixed(2)}</TableCell>
                 <TableCell>{stock.lot_size}</TableCell>
                 <TableCell>
-
-                  {
-                    stock.is_active?<Button
-                    size="sm"
-                    disabled
-                  >
-                  Active
-                  </Button>:<Button
-                    size="sm"
-                    onClick={() => handleMakeActive(stock.id)}
-                  >
-                  Make as Active
-                  </Button>
-
-                  }
-
-                 
-                </TableCell>
-                <TableCell>
-                  <Button
-                    size="sm"
-                    onClick={() => handlePlaceOrder(stock)}
-                  >
-                    Place Order
-                  </Button>
+                  <Badge variant="outline">Subscribed</Badge>
                 </TableCell>
               </TableRow>
             ))}
+            {stocks.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
+                  No Nifty options found. Click &quot;Sync Nifty Chain&quot; after connecting Upstox.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)} of {total} stocks
+          Showing {total === 0 ? 0 : (page - 1) * limit + 1} to{' '}
+          {Math.min(page * limit, total)} of {total} contracts
         </p>
         <div className="flex gap-2">
           <Button
@@ -129,19 +136,13 @@ const StockList = () => {
             variant="outline"
             size="sm"
             onClick={() => handlePageChange(page + 1)}
-            disabled={page === totalPages}
+            disabled={page >= totalPages}
           >
             Next
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
-
-      <PlaceOrderModal
-        open={orderModalOpen}
-        onOpenChange={setOrderModalOpen}
-        stock={selectedStock}
-      />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { API_BASE_URL, AUTH_TOKEN_KEY } from "./config";
+import { NIFTY_STRATEGY } from "./constants";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -36,16 +37,25 @@ export const getApiData = <T>(response: { data: { data: T } }): T =>
 
 // Dashboard APIs
 export const dashboardAPI = {
-  getStats: () => api.get("/instrument/dashboard-data"),
+  getStats: (strategyName: string = NIFTY_STRATEGY) =>
+    api.get("/instrument/dashboard-data", {
+      params: { strategy_name: strategyName },
+    }),
   getProfitLossChart: (period: string = "month") =>
     api.get(`/dashboard/profit-loss-chart?period=${period}`),
   generateToken: () => api.post("/dashboard/generate-token"),
 };
 
-// Stock APIs
+// Stock APIs — default to Nifty 50 hedging universe
 export const stockAPI = {
-  getStocks: (page: number = 1, limit: number = 10) =>
-    api.get(`/instrument/stock-list?pageIndex=${page}&pageSize=${limit}`),
+  getStocks: (
+    page: number = 1,
+    limit: number = 10,
+    name: string = "NIFTY",
+  ) =>
+    api.get(`/instrument/stock-list`, {
+      params: { pageIndex: page, pageSize: limit, name },
+    }),
   makeasActive: (id: string) =>
     api.get(`/instrument/strike-active-deactive/${id}`),
   placeOrder: (data: {
@@ -54,6 +64,8 @@ export const stockAPI = {
     quantity: number;
     price: number;
   }) => api.post("/stocks/place-order", data),
+  syncNiftyChain: () => api.post("/instrument/nifty-scalp/sync-chain"),
+  syncNiftyHedging: () => api.post("/instrument/nifty-scalp/sync-hedging"),
 };
 
 // Position APIs
@@ -88,29 +100,32 @@ export const authAPI = {
   getProfile: () => api.get("/auth/profile"),
 };
 
-// Scalping APIs
+// Nifty Options Scalp APIs (active strategy)
 export const scalpingAPI = {
-  getPerformance: (days: number = 30, strategyName: string = "SCALLPING") =>
+  getPerformance: (
+    days: number = 30,
+    strategyName: string = NIFTY_STRATEGY,
+  ) =>
     api.get("/instrument/scalping-performance", {
       params: { days, strategy_name: strategyName },
     }),
-  getStatus: () => api.get("/instrument/scalping-status"),
-  getStrategyConfig: (strategyName: string = "SCALLPING") =>
-    api.get("/instrument/strategy-config", {
-      params: { strategy_name: strategyName },
+  getStatus: () => api.get("/instrument/nifty-scalp/status"),
+  getStrategyConfig: () => api.get("/instrument/nifty-scalp/config"),
+  updateStrategyConfig: (payload: Record<string, unknown>) =>
+    api.patch("/instrument/nifty-scalp/config", payload),
+  /** Production ON/OFF — sets mode live/paper + user.is_live */
+  toggleProduction: (production: boolean) =>
+    api.post("/instrument/nifty-scalp/toggle-live", { production }),
+  /** Alias kept for older callers */
+  toggleLiveTrading: (production?: boolean) =>
+    api.post("/instrument/nifty-scalp/toggle-live", {
+      production: production ?? true,
     }),
-  updateStrategyConfig: (payload: {
-    mode?: "paper" | "live" | "backtest";
-    strategy_name?: string;
-  }) => api.patch("/instrument/strategy-config", payload),
-  toggleLiveTrading: () =>
-    api.get("/instrument/upstocks-order-place-toggle"),
   getAuditLog: (params: {
     days?: number;
     action?: string;
     limit?: number;
-  }) =>
-    api.get("/instrument/scalping-audit-log", { params }),
+  }) => api.get("/instrument/nifty-scalp/audit", { params }),
   runBacktest: (body: {
     startDate: string;
     endDate: string;

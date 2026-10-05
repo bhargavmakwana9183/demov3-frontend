@@ -39,7 +39,7 @@ const initialState: TradeHistoryState = {
   trades: [],
   loading: false,
   error: null,
-  strategyFilter: "SCALLPING",
+  strategyFilter: "NIFTY_OPTIONS_SCALP",
   dateRange: {
     from: null,
     to: null,

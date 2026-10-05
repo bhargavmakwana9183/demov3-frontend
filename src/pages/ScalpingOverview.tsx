@@ -4,20 +4,22 @@ import {
   fetchScalpingStatus,
   fetchScalpingPerformance,
   toggleLiveTrading,
-  updateTradingMode,
-  TradingMode,
+  setNiftyNotify,
 } from '@/store/slices/scalpingSlice';
 import { EngineStatusCard } from '@/components/Scalping/EngineStatusCard';
 import { TradingControls } from '@/components/Scalping/TradingControls';
-import { StrikeCard } from '@/components/Scalping/StrikeCard';
 import { IssuesPanel } from '@/components/Scalping/IssuesPanel';
 import { ScalpingSubNav } from '@/components/Scalping/ScalpingSubNav';
 import { ScalpingKpiCards } from '@/components/Dashboard/ScalpingKpiCards';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import { io } from 'socket.io-client';
+import { SOCKET_URL } from '@/lib/config';
+import { stockAPI } from '@/lib/api';
 
 const REFRESH_MS = 30_000;
 
@@ -28,11 +30,12 @@ const ScalpingOverview = () => {
     performance,
     mode,
     isLive,
+    production,
     statusLoading,
     togglingLive,
-    updatingMode,
     statusError,
     loading: perfLoading,
+    lastNotify,
   } = useAppSelector((state) => state.scalping);
 
   const refresh = useCallback(() => {
@@ -46,27 +49,47 @@ const ScalpingOverview = () => {
     return () => clearInterval(interval);
   }, [refresh]);
 
-  const handleToggleLive = async () => {
+  useEffect(() => {
+    const socket = io(SOCKET_URL, {
+      path: '/api/socket',
+      transports: ['websocket'],
+    });
+
+    socket.on('nifty_scalp_notify', (payload: { type?: string; event?: string; message?: string }) => {
+      const event = payload?.type || payload?.event || 'NOTIFY';
+      const message = payload?.message || 'Nifty scalp event';
+      dispatch(setNiftyNotify({ event, message }));
+      toast.message(event, { description: message });
+      dispatch(fetchScalpingStatus());
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [dispatch]);
+
+  const handleToggleProduction = async (next: boolean) => {
     try {
-      const result = await dispatch(toggleLiveTrading()).unwrap();
+      const result = await dispatch(toggleLiveTrading(next)).unwrap();
       toast.success(
-        result.isLive
-          ? 'Live broker orders enabled'
-          : 'Live broker orders disabled',
+        result.production
+          ? 'Production ON — live Upstox orders enabled'
+          : 'Production OFF — paper mode',
       );
       dispatch(fetchScalpingStatus());
-    } catch {
-      toast.error('Failed to toggle live trading');
+    } catch (err) {
+      toast.error(typeof err === 'string' ? err : 'Failed to toggle production');
     }
   };
 
-  const handleModeChange = async (newMode: TradingMode) => {
+  const handleSync = async (kind: 'chain' | 'hedging') => {
     try {
-      await dispatch(updateTradingMode(newMode)).unwrap();
-      toast.success(`Mode set to ${newMode}`);
-      dispatch(fetchScalpingStatus());
+      if (kind === 'chain') await stockAPI.syncNiftyChain();
+      else await stockAPI.syncNiftyHedging();
+      toast.success(kind === 'chain' ? 'Nifty option chain synced' : 'Hedging options synced');
+      refresh();
     } catch {
-      toast.error('Failed to update trading mode');
+      toast.error('Sync failed — check Upstox token');
     }
   };
 
@@ -74,14 +97,20 @@ const ScalpingOverview = () => {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Scalping</h1>
+          <h1 className="text-3xl font-bold text-foreground">Nifty 50 Scalper</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            SBIN options scalper · auto-refreshes every 30s
+            Options scalping · EMA 9/21 + RSI · auto-refreshes every 30s
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" asChild>
             <Link to="/dashboard">KPI Dashboard</Link>
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleSync('chain')}>
+            Sync Chain
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleSync('hedging')}>
+            Sync Hedging
           </Button>
           <Button
             variant="outline"
@@ -99,6 +128,19 @@ const ScalpingOverview = () => {
 
       <ScalpingSubNav />
 
+      {lastNotify && (
+        <Card className="bg-card border-border">
+          <CardContent className="py-3 text-sm flex flex-wrap gap-2 justify-between">
+            <span>
+              <strong>{lastNotify.event}</strong> — {lastNotify.message}
+            </span>
+            <span className="text-muted-foreground text-xs">
+              {new Date(lastNotify.at).toLocaleTimeString()}
+            </span>
+          </CardContent>
+        </Card>
+      )}
+
       {statusLoading && !status ? (
         <div className="grid gap-4 md:grid-cols-2">
           <Skeleton className="h-64" />
@@ -106,9 +148,9 @@ const ScalpingOverview = () => {
         </div>
       ) : statusError ? (
         <p className="text-sm text-muted-foreground border border-border rounded-lg p-4">
-          Could not load engine status — {statusError}. Ensure{' '}
-          <code className="text-xs">/instrument/scalping-status</code> is running
-          on the backend.
+          Could not load Nifty engine status — {statusError}. Ensure{' '}
+          <code className="text-xs">/instrument/nifty-scalp/status</code> is
+          running.
         </p>
       ) : status ? (
         <>
@@ -117,30 +159,42 @@ const ScalpingOverview = () => {
             <TradingControls
               mode={mode}
               isLive={isLive}
+              production={production || status.production}
               liveTradingEnabled={status.liveTradingEnabled}
               togglingLive={togglingLive}
-              updatingMode={updatingMode}
-              onToggleLive={handleToggleLive}
-              onModeChange={handleModeChange}
+              onToggleProduction={handleToggleProduction}
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <StrikeCard
-              type="CE"
-              strike={status.activeStrikes.CE}
-              resolution={status.strikeResolution.CE}
-              candleCount={status.candleCounts.CE}
-            />
-            <StrikeCard
-              type="PE"
-              strike={status.activeStrikes.PE}
-              resolution={status.strikeResolution.PE}
-              candleCount={status.candleCounts.PE}
-            />
-          </div>
+          {status.openPosition && status.trade && (
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Live Position Snapshot</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Symbol</p>
+                  <p className="font-medium">{status.trade.trading_symbol}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Gross P/L</p>
+                  <p className="font-medium">₹{Number(status.trade.pl ?? 0).toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Charges</p>
+                  <p className="font-medium">₹{Number(status.trade.charges ?? 0).toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Net P/L</p>
+                  <p className="font-medium">
+                    ₹{Number(status.trade.net_pl ?? status.trade.pl ?? 0).toFixed(2)}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-          <IssuesPanel issues={status.issues} />
+          <IssuesPanel issues={status.issues || []} />
         </>
       ) : null}
 

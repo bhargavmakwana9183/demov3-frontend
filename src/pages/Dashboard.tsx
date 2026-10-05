@@ -1,14 +1,26 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchDashboardStats, fetchProfitLossChart } from '@/store/slices/dashboardSlice';
-import { fetchScalpingPerformance } from '@/store/slices/scalpingSlice';
+import { fetchDashboardStats } from '@/store/slices/dashboardSlice';
+import {
+  fetchScalpingPerformance,
+  fetchScalpingStatus,
+  toggleLiveTrading,
+} from '@/store/slices/scalpingSlice';
 import { StatCard } from '@/components/Dashboard/StatCard';
-import { ProfitLossChart } from '@/components/Dashboard/ProfitLossChart';
 import { ScalpingKpiCards } from '@/components/Dashboard/ScalpingKpiCards';
 import { ScalpingDailyChart } from '@/components/Dashboard/ScalpingDailyChart';
 import { ScalpingBreakdowns } from '@/components/Dashboard/ScalpingBreakdowns';
-import { DollarSign, TrendingUp, Activity } from 'lucide-react';
+import {
+  DollarSign,
+  TrendingUp,
+  Activity,
+  Receipt,
+  Wallet,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UPSTOX_OAUTH_URL } from '@/lib/config';
@@ -20,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
 
 const PERIOD_OPTIONS = [
   { label: 'Last 7 days', value: 7 },
@@ -30,15 +43,25 @@ const PERIOD_OPTIONS = [
 
 const Dashboard = () => {
   const dispatch = useAppDispatch();
-  const { stats, chartData, loading, chartError, tokenGenerating } =
-    useAppSelector((state) => state.dashboard);
-  const { performance, days, loading: scalpingLoading, error: scalpingError } =
-    useAppSelector((state) => state.scalping);
+  const { stats, loading, tokenGenerating } = useAppSelector(
+    (state) => state.dashboard,
+  );
+  const {
+    performance,
+    days,
+    loading: scalpingLoading,
+    error: scalpingError,
+    production,
+    isLive,
+    mode,
+    status,
+    togglingLive,
+  } = useAppSelector((state) => state.scalping);
 
   useEffect(() => {
     dispatch(fetchDashboardStats());
-    dispatch(fetchProfitLossChart('month'));
     dispatch(fetchScalpingPerformance(30));
+    dispatch(fetchScalpingStatus());
   }, [dispatch]);
 
   const handlePeriodChange = (value: string) => {
@@ -48,6 +71,20 @@ const Dashboard = () => {
   const handleGenerateToken = () => {
     window.open(UPSTOX_OAUTH_URL, '_blank', 'noopener,noreferrer');
     toast.success('Upstox authorization opened in a new tab');
+  };
+
+  const handleProductionToggle = async (checked: boolean) => {
+    try {
+      const result = await dispatch(toggleLiveTrading(checked)).unwrap();
+      toast.success(
+        result.production
+          ? 'Production ON — live orders enabled'
+          : 'Production OFF — paper mode',
+      );
+      dispatch(fetchScalpingStatus());
+    } catch {
+      toast.error('Failed to toggle production');
+    }
   };
 
   if (loading) {
@@ -64,45 +101,84 @@ const Dashboard = () => {
     );
   }
 
-  const profitLossTrend = stats && stats.monthlyProfitLoss >= 0 ? 'up' : 'down';
+  const netPl = stats?.monthlyNetPl ?? stats?.monthlyProfitLoss ?? 0;
+  const profitLossTrend = netPl >= 0 ? 'up' : 'down';
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <div className="flex gap-2">
-        <Button variant="outline" size="sm" asChild>
-          <Link to="/scalping">Scalping Center</Link>
-        </Button>
-        <Button onClick={handleGenerateToken} disabled={tokenGenerating}>
-          {tokenGenerating ? 'Opening...' : 'Connect Upstox'}
-        </Button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Nifty 50 Options Scalper · profit, loss &amp; charges
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          <Badge variant={production || isLive ? 'destructive' : 'secondary'}>
+            Production {(production || isLive) ? 'ON' : 'OFF'}
+          </Badge>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/scalping">Scalping Center</Link>
+          </Button>
+          <Button onClick={handleGenerateToken} disabled={tokenGenerating}>
+            {tokenGenerating ? 'Opening...' : 'Connect Upstox'}
+          </Button>
         </div>
       </div>
 
-      {/* Account overview */}
+      <Card className="bg-card border-border">
+        <CardContent className="pt-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="font-medium">Production mode</p>
+            <p className="text-sm text-muted-foreground">
+              {production
+                ? 'Live Upstox orders enabled'
+                : 'Paper / dummy money — safe mode'}{' '}
+              · mode={mode}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Label htmlFor="dash-prod">Production</Label>
+            <Switch
+              id="dash-prod"
+              checked={Boolean(production || isLive)}
+              onCheckedChange={handleProductionToggle}
+              disabled={togglingLive}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Account Overview</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <h2 className="text-lg font-semibold text-foreground">
+          This Month — Nifty Scalper
+        </h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <StatCard
-            title="Monthly Profit/Loss"
-            value={`₹${stats?.monthlyProfitLoss?.toFixed(2) || '0.00'}`}
+            title="Gross P/L"
+            value={`₹${(stats?.monthlyProfitLoss ?? 0).toFixed(2)}`}
             icon={TrendingUp}
             trend={profitLossTrend}
-            subtitle="Current month performance"
+            subtitle="Before charges"
           />
           <StatCard
-            title="Monthly Trailing Profit/Loss"
-            value={`₹${stats?.tralling_pl?.toFixed(2) || '0.00'}`}
-            icon={TrendingUp}
+            title="Net P/L"
+            value={`₹${netPl.toFixed(2)}`}
+            icon={Wallet}
             trend={profitLossTrend}
-            subtitle="Current month performance"
+            subtitle="After charges"
           />
           <StatCard
-            title="Account Balance"
+            title="Charges"
+            value={`₹${(stats?.monthlyCharges ?? 0).toFixed(2)}`}
+            icon={Receipt}
+            subtitle="Brokerage + slippage"
+          />
+          <StatCard
+            title="Strategy Balance"
             value={`₹${stats?.accountBalance?.toFixed(2) || '0.00'}`}
             icon={DollarSign}
-            subtitle="Available funds"
+            subtitle="Paper / strategy funds"
           />
           <StatCard
             title="Total Trades"
@@ -111,9 +187,15 @@ const Dashboard = () => {
             subtitle="Current month"
           />
         </div>
+        {status?.openPosition && status.trade && (
+          <p className="text-sm text-muted-foreground">
+            Open now: <strong>{status.trade.trading_symbol}</strong> · Net ₹
+            {Number(status.trade.net_pl ?? status.trade.pl ?? 0).toFixed(2)} ·
+            Charges ₹{Number(status.trade.charges ?? 0).toFixed(2)}
+          </p>
+        )}
       </section>
 
-      {/* Scalping performance */}
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -152,8 +234,7 @@ const Dashboard = () => {
           </div>
         ) : scalpingError ? (
           <p className="text-sm text-muted-foreground rounded-lg border border-border p-4">
-            Scalping KPIs unavailable — {scalpingError}. Ensure the backend exposes{' '}
-            <code className="text-xs">/instrument/scalping-performance</code>.
+            Scalping KPIs unavailable — {scalpingError}
           </p>
         ) : performance ? (
           <div className="space-y-4">
@@ -165,16 +246,6 @@ const Dashboard = () => {
             />
           </div>
         ) : null}
-      </section>
-
-      {/* Legacy monthly chart */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Monthly Trend</h2>
-        {chartError ? (
-          <p className="text-sm text-muted-foreground">{chartError}</p>
-        ) : (
-          <ProfitLossChart data={chartData} />
-        )}
       </section>
     </div>
   );

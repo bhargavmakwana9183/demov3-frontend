@@ -2,7 +2,10 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { dashboardAPI } from "@/lib/api";
 
 interface DashboardStats {
+  strategyName?: string;
   monthlyProfitLoss: number;
+  monthlyNetPl?: number;
+  monthlyCharges?: number;
   accountBalance: number;
   totalTrades: number;
   tralling_pl: number;

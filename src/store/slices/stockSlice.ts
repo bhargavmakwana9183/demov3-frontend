@@ -10,6 +10,9 @@ export interface Stock {
   lot_size: number;
   is_active: boolean;
   instrument_type: string;
+  strike_price?: number;
+  expiry?: string;
+  instrument_key?: string;
 }
 
 interface StockState {
@@ -75,7 +78,7 @@ const stockSlice = createSlice({
       .addCase(fetchStocks.fulfilled, (state, action) => {
         state.loading = false;
         state.stocks = action.payload.data;
-        state.total = action.payload.pagination.total;
+        state.total = action.payload.pagination?.total ?? action.payload.total ?? 0;
       })
       .addCase(fetchStocks.rejected, (state, action) => {
         state.loading = false;

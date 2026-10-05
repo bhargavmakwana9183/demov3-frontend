@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { scalpingAPI } from "@/lib/api";
+import { NIFTY_STRATEGY } from "@/lib/constants";
 
 export interface ScalpingDailyStat {
   tradeDate: string;
@@ -39,48 +40,64 @@ export interface ScalpingPerformance {
   dailyStats: ScalpingDailyStat[];
 }
 
-export interface ResolvedStrike {
-  instrument_key: string;
-  instrument_type: string;
-  trading_symbol: string;
-  strike_price: number;
-  ltp: number;
-  lot_size: number;
-  expiry: string;
-  bid_price?: number;
-  ask_price?: number;
-  open_interest?: number;
-  spread_pct?: number;
+export interface NiftyTradeSnapshot {
+  id?: string;
+  trade_id?: string;
+  trading_symbol?: string;
+  instrument_type?: string;
+  buy_price?: number;
+  ltp?: number;
+  target_price?: number;
+  stop_loss?: number;
+  qty?: number;
+  lot_size?: number;
+  pl?: number;
+  net_pl?: number;
+  charges?: number;
+  is_active?: boolean;
+  exit_reason?: string | null;
 }
 
+export interface NiftyScalpConfigSnapshot {
+  mode: string;
+  is_active: boolean;
+  target_profit_rs: number;
+  add_lot_points: number;
+  enable_plan_b: boolean;
+  enable_overnight_carry: boolean;
+  paper_balance: number;
+}
+
+/** Normalized status used by UI (mapped from /nifty-scalp/status) */
 export interface ScalpingSystemStatus {
+  strategy: string;
   mode: string;
   isActive: boolean;
   isLive: boolean;
   liveTradingEnabled: boolean;
-  marketOpen: boolean;
-  engineState: string;
-  underlyingLtp: number;
+  production: boolean;
+  balance: number;
+  expiry: string | null;
+  hedgingCount: number;
   openPosition: boolean;
-  readyForTrading: boolean;
-  activeStrikes: {
-    CE?: ResolvedStrike | null;
-    PE?: ResolvedStrike | null;
-  };
-  strikeResolution: {
-    CE?: { ok: boolean; reason?: string };
-    PE?: { ok: boolean; reason?: string };
-  };
-  candleCounts: {
-    CE?: number;
-    PE?: number;
-  };
-  todayStats: {
+  engineState: string;
+  config: NiftyScalpConfigSnapshot;
+  trade: NiftyTradeSnapshot | null;
+  position: Record<string, unknown> | null;
+  now: string;
+  // legacy-compatible optional fields
+  marketOpen?: boolean;
+  underlyingLtp?: number;
+  readyForTrading?: boolean;
+  activeStrikes?: { CE?: unknown; PE?: unknown };
+  strikeResolution?: { CE?: { ok: boolean; reason?: string }; PE?: { ok: boolean; reason?: string } };
+  candleCounts?: { CE?: number; PE?: number };
+  todayStats?: {
     tradesCount: number;
     dailyPl: number;
     isHalted: boolean;
   } | null;
-  issues: string[];
+  issues?: string[];
 }
 
 export type TradingMode = "paper" | "live" | "backtest";
@@ -165,7 +182,17 @@ export type AuditAction =
   | "EXIT"
   | "HOLD"
   | "PARTIAL"
-  | "RECONCILE";
+  | "RECONCILE"
+  | "SIGNAL_EVAL"
+  | "ADD_LOT"
+  | "PLAN_B_SCALP"
+  | "TARGET_HIT"
+  | "CARRY_FORWARD"
+  | "ENTRY_FILLED"
+  | "CHAIN_SYNC"
+  | "HEDGING_SYNC"
+  | "LIVE_ORDER_FAIL"
+  | "CANNOT_ADD_LOT";
 
 export interface AuditLogEntry {
   id: string;
@@ -207,6 +234,7 @@ interface ScalpingState {
   auditFilters: AuditLogFilters;
   mode: TradingMode;
   isLive: boolean;
+  production: boolean;
   days: number;
   loading: boolean;
   statusLoading: boolean;
@@ -222,6 +250,7 @@ interface ScalpingState {
   optimizationReport: OptimizationReport | null;
   optimizeLoading: boolean;
   optimizeError: string | null;
+  lastNotify: { event: string; message: string; at: string } | null;
 }
 
 const initialState: ScalpingState = {
@@ -232,6 +261,7 @@ const initialState: ScalpingState = {
   auditFilters: { days: 7, action: "", limit: 100 },
   mode: "paper",
   isLive: false,
+  production: false,
   days: 30,
   loading: false,
   statusLoading: false,
@@ -247,12 +277,104 @@ const initialState: ScalpingState = {
   optimizationReport: null,
   optimizeLoading: false,
   optimizeError: null,
+  lastNotify: null,
+};
+
+type RawNiftyStatus = {
+  strategy?: string;
+  config?: Partial<NiftyScalpConfigSnapshot> & { mode?: string; is_active?: boolean };
+  balance?: number;
+  expiry?: string | null;
+  hedgingCount?: number;
+  position?: Record<string, unknown> | null;
+  trade?: NiftyTradeSnapshot | null;
+  now?: string;
+  isLive?: boolean;
+  mode?: string;
+  isActive?: boolean;
+  liveTradingEnabled?: boolean;
+  engineState?: string;
+  marketOpen?: boolean;
+  underlyingLtp?: number;
+  openPosition?: boolean;
+  readyForTrading?: boolean;
+  issues?: string[];
+  todayStats?: ScalpingSystemStatus["todayStats"];
+  activeStrikes?: ScalpingSystemStatus["activeStrikes"];
+  strikeResolution?: ScalpingSystemStatus["strikeResolution"];
+  candleCounts?: ScalpingSystemStatus["candleCounts"];
+};
+
+const mapNiftyStatus = (raw: RawNiftyStatus): ScalpingSystemStatus => {
+  const mode = (raw.config?.mode || raw.mode || "paper") as string;
+  const isLive = Boolean(raw.isLive);
+  const isActive = Boolean(raw.config?.is_active ?? raw.isActive ?? true);
+  const openPosition = Boolean(raw.position || raw.openPosition);
+  const production = isLive && mode === "live";
+
+  let engineState = raw.engineState || "SCANNING";
+  if (openPosition) engineState = "IN_TRADE";
+  if (!isActive) engineState = "INACTIVE";
+
+  const issues: string[] = [...(raw.issues || [])];
+  if ((raw.hedgingCount ?? 0) === 0) {
+    issues.push("No Nifty hedging options synced — run chain sync");
+  }
+  if (!raw.expiry) {
+    issues.push("No upcoming Nifty expiry found");
+  }
+
+  return {
+    strategy: raw.strategy || NIFTY_STRATEGY,
+    mode,
+    isActive,
+    isLive,
+    liveTradingEnabled: production,
+    production,
+    balance: Number(raw.balance ?? raw.config?.paper_balance ?? 0),
+    expiry: raw.expiry ?? null,
+    hedgingCount: Number(raw.hedgingCount ?? 0),
+    openPosition,
+    engineState,
+    config: {
+      mode,
+      is_active: isActive,
+      target_profit_rs: Number(raw.config?.target_profit_rs ?? 200),
+      add_lot_points: Number(raw.config?.add_lot_points ?? 10),
+      enable_plan_b: raw.config?.enable_plan_b !== false,
+      enable_overnight_carry: raw.config?.enable_overnight_carry !== false,
+      paper_balance: Number(raw.config?.paper_balance ?? 0),
+    },
+    trade: raw.trade ?? null,
+    position: raw.position ?? null,
+    now: raw.now || new Date().toISOString(),
+    marketOpen: raw.marketOpen,
+    underlyingLtp: raw.underlyingLtp,
+    readyForTrading: issues.length === 0 && isActive,
+    activeStrikes: raw.activeStrikes,
+    strikeResolution: raw.strikeResolution,
+    candleCounts: raw.candleCounts,
+    todayStats: raw.todayStats ?? null,
+    issues,
+  };
+};
+
+const buildSkipBreakdown = (logs: AuditLogEntry[]): AuditSkipBreakdownRow[] => {
+  const map = new Map<string, number>();
+  for (const log of logs) {
+    if (log.action !== "SKIP") continue;
+    const reason = log.reason || "UNKNOWN";
+    map.set(reason, (map.get(reason) || 0) + 1);
+  }
+  return Array.from(map.entries())
+    .map(([reason, count]) => ({ reason, count }))
+    .sort((a, b) => b.count - a.count);
 };
 
 export const fetchScalpingPerformance = createAsyncThunk(
   "scalping/fetchPerformance",
   async (days: number) => {
-    const response = await scalpingAPI.getPerformance(days);
+    const response = await scalpingAPI.getPerformance(days, NIFTY_STRATEGY);
     return { data: response.data.data as ScalpingPerformance, days };
   },
 );
@@ -261,7 +383,7 @@ export const fetchScalpingStatus = createAsyncThunk(
   "scalping/fetchStatus",
   async () => {
     const response = await scalpingAPI.getStatus();
-    return response.data.data as ScalpingSystemStatus;
+    return mapNiftyStatus(response.data.data as RawNiftyStatus);
   },
 );
 
@@ -279,25 +401,33 @@ export const fetchScalpingConfig = createAsyncThunk(
 
 export const toggleLiveTrading = createAsyncThunk(
   "scalping/toggleLive",
-  async () => {
-    const response = await scalpingAPI.toggleLiveTrading();
-    return response.data.data as {
-      isLive: boolean;
-      mode: TradingMode;
-      liveTradingEnabled: boolean;
-    };
+  async (production: boolean, { rejectWithValue }) => {
+    try {
+      const response = await scalpingAPI.toggleProduction(production);
+      return response.data.data as {
+        production: boolean;
+        isLive: boolean;
+        mode: TradingMode;
+      };
+    } catch (error) {
+      return rejectWithValue(getThunkError(error, "Failed to toggle production"));
+    }
   },
 );
 
 export const updateTradingMode = createAsyncThunk(
   "scalping/updateMode",
-  async (mode: TradingMode) => {
-    const response = await scalpingAPI.updateStrategyConfig({ mode });
-    const data = response.data.data as {
-      config: { mode: TradingMode };
-      isLive: boolean;
-    };
-    return data;
+  async (mode: TradingMode, { rejectWithValue }) => {
+    try {
+      const response = await scalpingAPI.updateStrategyConfig({ mode });
+      const data = response.data.data as {
+        config: { mode: TradingMode };
+        isLive: boolean;
+      };
+      return data;
+    } catch (error) {
+      return rejectWithValue(getThunkError(error, "Failed to update mode"));
+    }
   },
 );
 
@@ -310,14 +440,16 @@ export const fetchScalpingAuditLog = createAsyncThunk(
       limit: filters.limit,
     });
     const data = response.data.data as {
-      logs: AuditLogEntry[];
-      skipBreakdown: Array<{ reason?: string; count?: number | string }>;
+      logs?: AuditLogEntry[];
+      skipBreakdown?: Array<{ reason?: string; count?: number | string }>;
     };
-    const skipBreakdown = (data.skipBreakdown ?? []).map((row) => ({
-      reason: row.reason ?? "UNKNOWN",
-      count: Number(row.count ?? 0),
-    }));
-    return { logs: data.logs ?? [], skipBreakdown, filters };
+    const logs = data.logs ?? [];
+    const skipBreakdown =
+      data.skipBreakdown?.map((row) => ({
+        reason: row.reason ?? "UNKNOWN",
+        count: Number(row.count ?? 0),
+      })) ?? buildSkipBreakdown(logs);
+    return { logs, skipBreakdown, filters };
   },
 );
 
@@ -382,6 +514,15 @@ const scalpingSlice = createSlice({
     setAuditFilters: (state, action: PayloadAction<Partial<AuditLogFilters>>) => {
       state.auditFilters = { ...state.auditFilters, ...action.payload };
     },
+    setNiftyNotify: (
+      state,
+      action: PayloadAction<{ event: string; message: string }>,
+    ) => {
+      state.lastNotify = {
+        ...action.payload,
+        at: new Date().toISOString(),
+      };
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -408,15 +549,18 @@ const scalpingSlice = createSlice({
         state.status = action.payload;
         state.mode = (action.payload.mode as TradingMode) || "paper";
         state.isLive = action.payload.isLive;
+        state.production = action.payload.production;
       })
       .addCase(fetchScalpingStatus.rejected, (state, action) => {
         state.statusLoading = false;
         state.statusError =
-          action.error.message || "Failed to fetch scalping status";
+          action.error.message || "Failed to fetch Nifty scalp status";
       })
       .addCase(fetchScalpingConfig.fulfilled, (state, action) => {
         state.mode = action.payload.config.mode;
         state.isLive = action.payload.isLive;
+        state.production =
+          action.payload.isLive && action.payload.config.mode === "live";
       })
       .addCase(toggleLiveTrading.pending, (state) => {
         state.togglingLive = true;
@@ -425,10 +569,12 @@ const scalpingSlice = createSlice({
         state.togglingLive = false;
         state.isLive = action.payload.isLive;
         state.mode = action.payload.mode;
+        state.production = action.payload.production;
         if (state.status) {
           state.status.isLive = action.payload.isLive;
-          state.status.liveTradingEnabled = action.payload.liveTradingEnabled;
           state.status.mode = action.payload.mode;
+          state.status.production = action.payload.production;
+          state.status.liveTradingEnabled = action.payload.production;
         }
       })
       .addCase(toggleLiveTrading.rejected, (state) => {
@@ -441,8 +587,11 @@ const scalpingSlice = createSlice({
         state.updatingMode = false;
         state.mode = action.payload.config.mode;
         state.isLive = action.payload.isLive;
+        state.production =
+          action.payload.isLive && action.payload.config.mode === "live";
         if (state.status) {
           state.status.mode = action.payload.config.mode;
+          state.status.production = state.production;
         }
       })
       .addCase(updateTradingMode.rejected, (state) => {
@@ -492,5 +641,6 @@ const scalpingSlice = createSlice({
   },
 });
 
-export const { setScalpingDays, setAuditFilters } = scalpingSlice.actions;
+export const { setScalpingDays, setAuditFilters, setNiftyNotify } =
+  scalpingSlice.actions;
 export default scalpingSlice.reducer;

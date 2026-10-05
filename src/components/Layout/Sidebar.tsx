@@ -6,9 +6,9 @@ import { cn } from '@/lib/utils';
 
 const menuItems = [
   { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { title: 'Scalping', path: '/scalping', icon: Zap },
-  { title: 'Stock List', path: '/stocks', icon: TrendingUp },
-  { title: 'Current Positions', path: '/positions', icon: Briefcase },
+  { title: 'Nifty Scalper', path: '/scalping', icon: Zap },
+  { title: 'Nifty Options', path: '/stocks', icon: TrendingUp },
+  { title: 'Positions', path: '/positions', icon: Briefcase },
   { title: 'Trade History', path: '/history', icon: History },
 ];
 
@@ -24,7 +24,7 @@ export const Sidebar = () => {
     >
       <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
         {!collapsed && (
-          <h1 className="text-xl font-bold text-sidebar-foreground">TradePro</h1>
+          <h1 className="text-xl font-bold text-sidebar-foreground">NiftyScalp</h1>
         )}
         <Button
           variant="ghost"

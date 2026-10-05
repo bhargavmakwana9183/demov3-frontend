@@ -27,10 +27,16 @@ const ACTION_OPTIONS = [
   { value: 'all', label: 'All actions' },
   { value: 'SKIP', label: 'SKIP' },
   { value: 'ENTER', label: 'ENTER' },
+  { value: 'ENTRY_FILLED', label: 'ENTRY_FILLED' },
   { value: 'EXIT', label: 'EXIT' },
+  { value: 'TARGET_HIT', label: 'TARGET_HIT' },
+  { value: 'ADD_LOT', label: 'ADD_LOT' },
+  { value: 'PLAN_B_SCALP', label: 'PLAN_B_SCALP' },
   { value: 'PARTIAL', label: 'PARTIAL' },
-  { value: 'RECONCILE', label: 'RECONCILE' },
+  { value: 'SIGNAL_EVAL', label: 'SIGNAL_EVAL' },
+  { value: 'CARRY_FORWARD', label: 'CARRY_FORWARD' },
   { value: 'HOLD', label: 'HOLD' },
+  { value: 'LIVE_ORDER_FAIL', label: 'LIVE_ORDER_FAIL' },
 ];
 
 const ScalpingAuditLog = () => {
@@ -79,9 +85,9 @@ const ScalpingAuditLog = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Scalping</h1>
+        <h1 className="text-3xl font-bold text-foreground">Nifty Audit Log</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Decision audit — every SKIP, ENTER, EXIT, and RECONCILE event
+          Decision audit — SKIP, ENTER, ADD_LOT, PLAN_B, TARGET_HIT, EXIT and more
         </p>
       </div>
 

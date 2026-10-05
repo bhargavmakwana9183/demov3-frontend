@@ -36,7 +36,7 @@ interface PositionState {
 
 const initialState: PositionState = {
   positions: [],
-  strategyFilter: "SCALLPING",
+  strategyFilter: "NIFTY_OPTIONS_SCALP",
   includeClosed: false,
   loading: false,
   error: null,

@@ -4,13 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -20,46 +13,37 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { TradingMode } from '@/store/slices/scalpingSlice';
 import { Shield, Zap } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface TradingControlsProps {
-  mode: TradingMode;
+  mode: string;
   isLive: boolean;
+  production: boolean;
   liveTradingEnabled: boolean;
   togglingLive: boolean;
-  updatingMode: boolean;
-  onToggleLive: () => void;
-  onModeChange: (mode: TradingMode) => void;
+  onToggleProduction: (production: boolean) => void;
 }
-
-const MODE_DESCRIPTIONS: Record<TradingMode, string> = {
-  paper: 'DB-only trades, no broker orders',
-  live: 'Real Upstox orders when live toggle is ON',
-  backtest: 'WebSocket engine off — use backtest API',
-};
 
 export const TradingControls = ({
   mode,
   isLive,
+  production,
   liveTradingEnabled,
   togglingLive,
-  updatingMode,
-  onToggleLive,
-  onModeChange,
+  onToggleProduction,
 }: TradingControlsProps) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pendingLive, setPendingLive] = useState(false);
+  const [pendingProduction, setPendingProduction] = useState(false);
 
   const handleSwitchIntent = (checked: boolean) => {
-    if (mode !== 'live') return;
-    setPendingLive(checked);
+    setPendingProduction(checked);
     setConfirmOpen(true);
   };
 
   const handleConfirm = () => {
     setConfirmOpen(false);
-    onToggleLive();
+    onToggleProduction(pendingProduction);
   };
 
   return (
@@ -68,55 +52,49 @@ export const TradingControls = ({
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            Trading Controls
+            Production Controls
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label>Strategy Mode</Label>
-            <Select
-              value={mode}
-              onValueChange={(v) => onModeChange(v as TradingMode)}
-              disabled={updatingMode}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="paper">Paper</SelectItem>
-                <SelectItem value="live">Live</SelectItem>
-                <SelectItem value="backtest">Backtest</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {MODE_DESCRIPTIONS[mode]}
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between rounded-lg border border-border p-4">
+          <div
+            className={cn(
+              'flex items-center justify-between rounded-lg border p-4',
+              production
+                ? 'border-destructive/50 bg-destructive/5'
+                : 'border-border',
+            )}
+          >
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4" />
-                <Label htmlFor="live-toggle" className="font-medium">
-                  Broker Live Orders
+                <Zap
+                  className={cn(
+                    'h-4 w-4',
+                    production ? 'text-destructive' : 'text-muted-foreground',
+                  )}
+                />
+                <Label htmlFor="production-toggle" className="font-medium">
+                  Production {production ? 'ON' : 'OFF'}
                 </Label>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Requires mode = live and Upstox token
+              <p className="text-xs text-muted-foreground max-w-[240px]">
+                {production
+                  ? 'Live Upstox orders are enabled for Nifty Options Scalp'
+                  : 'Paper / dummy money mode — no real broker orders'}
               </p>
             </div>
             <Switch
-              id="live-toggle"
-              checked={isLive}
+              id="production-toggle"
+              checked={production}
               onCheckedChange={handleSwitchIntent}
-              disabled={togglingLive || mode !== 'live'}
+              disabled={togglingLive}
             />
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Badge variant={mode === 'paper' ? 'secondary' : 'outline'}>
-              Mode: {mode}
+            <Badge variant={production ? 'destructive' : 'secondary'}>
+              Production: {production ? 'ON' : 'OFF'}
             </Badge>
+            <Badge variant="outline">Mode: {mode}</Badge>
             <Badge variant={isLive ? 'destructive' : 'secondary'}>
               is_live: {isLive ? 'ON' : 'OFF'}
             </Badge>
@@ -125,11 +103,10 @@ export const TradingControls = ({
             </Badge>
           </div>
 
-          {mode !== 'live' && (
-            <p className="text-xs text-muted-foreground">
-              Set mode to <strong>live</strong> before enabling broker orders.
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground">
+            Turning Production ON sets strategy mode to <strong>live</strong> and
+            enables broker orders. Turning OFF switches back to paper mode.
+          </p>
         </CardContent>
       </Card>
 
@@ -137,20 +114,20 @@ export const TradingControls = ({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {pendingLive
-                ? 'Enable live broker orders?'
-                : 'Disable live broker orders?'}
+              {pendingProduction
+                ? 'Turn Production ON?'
+                : 'Turn Production OFF?'}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {pendingLive
-                ? 'Real BUY/SELL orders will be placed on Upstox when signals fire. Ensure your token is valid and risk limits are set.'
-                : 'The bot will stop placing real orders on Upstox. Open positions may still need manual square-off.'}
+              {pendingProduction
+                ? 'Real BUY/SELL orders will be placed on Upstox when Nifty signals fire. Ensure your token is valid and risk limits are set.'
+                : 'The bot will return to paper/dummy money mode. Open live positions may still need manual square-off on Upstox.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirm}>
-              {pendingLive ? 'Turn On' : 'Turn Off'}
+              {pendingProduction ? 'Turn Production ON' : 'Turn Production OFF'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
