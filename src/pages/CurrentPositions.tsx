@@ -80,26 +80,31 @@ const CurrentPositions = () => {
   ).length;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Current Positions</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Current Positions</h1>
           <p className="text-sm text-muted-foreground">
-            Nifty 50 scalper positions · live via WebSocket · {positions.length}{' '}
-            position{positions.length !== 1 ? 's' : ''} today
+            Live WebSocket · {positions.length} today
             {strategyFilter === 'NIFTY_OPTIONS_SCALP' && scalpingCount > 0
-              ? ` (${scalpingCount} Nifty)`
+              ? ` · ${scalpingCount} Nifty`
               : ''}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={loadPositions} disabled={loading}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={loadPositions}
+          disabled={loading}
+          className="w-full sm:w-auto"
+        >
           <RefreshCw className={cn('h-4 w-4 mr-2', loading && 'animate-spin')} />
           Refresh
         </Button>
       </div>
 
       <Card className="bg-card border-border">
-        <CardContent className="pt-6 flex flex-wrap gap-6 items-end">
+        <CardContent className="pt-4 sm:pt-6 flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6 sm:items-end">
           <StrategyFilter value={strategyFilter} onChange={handleStrategyChange} />
           <div className="flex items-center gap-3 pb-1">
             <Switch
@@ -114,7 +119,7 @@ const CurrentPositions = () => {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {positions.map((position) => {
           const isScalping = position.strategy_name === 'NIFTY_OPTIONS_SCALP';
           const displayPl = position.netPl ?? position.profitLoss;

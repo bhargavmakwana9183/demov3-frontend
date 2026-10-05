@@ -85,7 +85,7 @@ const ScalpingAuditLog = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Nifty Audit Log</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Nifty Audit Log</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Decision audit — SKIP, ENTER, ADD_LOT, PLAN_B, TARGET_HIT, EXIT and more
         </p>
@@ -94,9 +94,9 @@ const ScalpingAuditLog = () => {
       <ScalpingSubNav />
 
       <Card className="bg-card border-border">
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="space-y-2 min-w-[140px]">
+        <CardContent className="pt-4 sm:pt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            <div className="space-y-2">
               <Label>Period</Label>
               <Select value={localDays} onValueChange={setLocalDays}>
                 <SelectTrigger>
@@ -111,7 +111,7 @@ const ScalpingAuditLog = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2 min-w-[160px]">
+            <div className="space-y-2">
               <Label>Action</Label>
               <Select value={localAction} onValueChange={setLocalAction}>
                 <SelectTrigger>
@@ -126,7 +126,7 @@ const ScalpingAuditLog = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2 min-w-[120px]">
+            <div className="space-y-2">
               <Label>Limit</Label>
               <Select value={localLimit} onValueChange={setLocalLimit}>
                 <SelectTrigger>
@@ -141,13 +141,14 @@ const ScalpingAuditLog = () => {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleApply} disabled={auditLoading}>
+            <Button onClick={handleApply} disabled={auditLoading} className="w-full">
               Apply Filter
             </Button>
             <Button
               variant="outline"
               onClick={handleApply}
               disabled={auditLoading}
+              className="w-full"
             >
               <RefreshCw
                 className={`h-4 w-4 mr-2 ${auditLoading ? 'animate-spin' : ''}`}

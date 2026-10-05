@@ -47,8 +47,10 @@ const Login = () => {
               <TrendingUp className="h-6 w-6 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">TradePro Admin</CardTitle>
-          <CardDescription>Enter your credentials to access the admin panel</CardDescription>
+          <CardTitle className="text-2xl font-bold">NiftyScalp</CardTitle>
+          <CardDescription>
+            Sign in to manage Nifty 50 options scalping
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

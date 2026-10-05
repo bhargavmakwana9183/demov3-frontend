@@ -17,10 +17,10 @@ interface StrategyFilterProps {
 }
 
 export const StrategyFilter = ({ value, onChange }: StrategyFilterProps) => (
-  <div className="space-y-2 min-w-[180px]">
+  <div className="space-y-2 w-full sm:min-w-[180px] sm:w-auto">
     <Label>Strategy</Label>
     <Select value={value} onValueChange={(v) => onChange(v as StrategyFilterValue)}>
-      <SelectTrigger>
+      <SelectTrigger className="w-full">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

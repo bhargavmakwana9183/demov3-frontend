@@ -123,7 +123,7 @@ const ScalpingBacktest = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Scalping</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Backtest</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Historical backtest and parameter optimization on stored candles
         </p>

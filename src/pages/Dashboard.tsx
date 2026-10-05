@@ -105,30 +105,30 @@ const Dashboard = () => {
   const profitLossTrend = netPl >= 0 ? 'up' : 'down';
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Nifty 50 Options Scalper · profit, loss &amp; charges
           </p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
           <Badge variant={production || isLive ? 'destructive' : 'secondary'}>
-            Production {(production || isLive) ? 'ON' : 'OFF'}
+            Prod {(production || isLive) ? 'ON' : 'OFF'}
           </Badge>
           <Button variant="outline" size="sm" asChild>
-            <Link to="/scalping">Scalping Center</Link>
+            <Link to="/scalping">Scalper</Link>
           </Button>
-          <Button onClick={handleGenerateToken} disabled={tokenGenerating}>
+          <Button size="sm" onClick={handleGenerateToken} disabled={tokenGenerating}>
             {tokenGenerating ? 'Opening...' : 'Connect Upstox'}
           </Button>
         </div>
       </div>
 
       <Card className="bg-card border-border">
-        <CardContent className="pt-6 flex flex-wrap items-center justify-between gap-4">
-          <div>
+        <CardContent className="pt-4 sm:pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0">
             <p className="font-medium">Production mode</p>
             <p className="text-sm text-muted-foreground">
               {production
@@ -137,7 +137,7 @@ const Dashboard = () => {
               · mode={mode}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <Label htmlFor="dash-prod">Production</Label>
             <Switch
               id="dash-prod"
@@ -150,10 +150,10 @@ const Dashboard = () => {
       </Card>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">
+        <h2 className="text-base sm:text-lg font-semibold text-foreground">
           This Month — Nifty Scalper
         </h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
           <StatCard
             title="Gross P/L"
             value={`₹${(stats?.monthlyProfitLoss ?? 0).toFixed(2)}`}
@@ -210,7 +210,7 @@ const Dashboard = () => {
             )}
           </div>
           <Select value={String(days)} onValueChange={handlePeriodChange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Period" />
             </SelectTrigger>
             <SelectContent>

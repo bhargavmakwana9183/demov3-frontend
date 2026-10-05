@@ -41,18 +41,21 @@ export const ScalpingDailyChart = ({ dailyStats }: ScalpingDailyChartProps) => {
       <CardHeader>
         <CardTitle>Scalping Daily P/L</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={280}>
+      <CardContent className="overflow-x-auto">
+        <div className="min-w-[280px] h-[220px] sm:h-[280px]">
+        <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis
               dataKey="date"
               stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+              interval="preserveStartEnd"
             />
             <YAxis
               stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+              width={48}
             />
             <Tooltip
               contentStyle={{
@@ -71,10 +74,11 @@ export const ScalpingDailyChart = ({ dailyStats }: ScalpingDailyChartProps) => {
               dataKey="profitLoss"
               stroke="hsl(var(--primary))"
               strokeWidth={2}
-              dot={{ fill: 'hsl(var(--primary))', r: 3 }}
+              dot={{ fill: 'hsl(var(--primary))', r: 2 }}
             />
           </LineChart>
         </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );

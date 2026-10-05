@@ -95,20 +95,22 @@ export const NiftyDataSyncCard = ({ onSyncComplete }: NiftyDataSyncCardProps) =>
           <li>syncNiftyOptionChain</li>
           <li>syncNiftyHedgingOptions</li>
         </ol>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2">
           <Button
             size="sm"
+            className="w-full sm:w-auto"
             onClick={runFullMorningSync}
             disabled={syncing !== null}
           >
             <RefreshCw
               className={cn('h-4 w-4 mr-2', syncing === 'full' && 'animate-spin')}
             />
-            Run morning sync (all 3 steps)
+            Run morning sync
           </Button>
           <Button
             variant="outline"
             size="sm"
+            className="w-full sm:w-auto"
             onClick={runChainOnly}
             disabled={syncing !== null}
           >

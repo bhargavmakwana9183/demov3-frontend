@@ -133,7 +133,7 @@ interface AuditLogTableProps {
 }
 
 export const AuditLogTable = ({ logs }: AuditLogTableProps) => (
-  <div className="bg-card border border-border rounded-lg overflow-hidden">
+  <div className="bg-card border border-border rounded-lg overflow-x-auto">
     <Table>
       <TableHeader>
         <TableRow>

@@ -83,17 +83,17 @@ const ScalpingOverview = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Nifty 50 Scalper</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Nifty 50 Scalper</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Options scalping · EMA 9/21 + RSI · auto-refreshes every 30s
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" asChild>
-            <Link to="/dashboard">KPI Dashboard</Link>
+            <Link to="/dashboard">Dashboard</Link>
           </Button>
           <Button
             variant="outline"

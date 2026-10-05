@@ -25,7 +25,7 @@ export const StatCard = ({ title, value, icon: Icon, trend, subtitle }: StatCard
         <Icon className="h-5 w-5 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className={cn('text-2xl font-bold', getTrendColor())}>{value}</div>
+        <div className={cn('text-xl sm:text-2xl font-bold break-all', getTrendColor())}>{value}</div>
         {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
       </CardContent>
     </Card>

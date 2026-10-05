@@ -64,11 +64,11 @@ export const TradingControls = ({
                 : 'border-border',
             )}
           >
-            <div className="space-y-1">
+            <div className="space-y-1 min-w-0 flex-1 pr-3">
               <div className="flex items-center gap-2">
                 <Zap
                   className={cn(
-                    'h-4 w-4',
+                    'h-4 w-4 shrink-0',
                     production ? 'text-destructive' : 'text-muted-foreground',
                   )}
                 />
@@ -76,7 +76,7 @@ export const TradingControls = ({
                   Production {production ? 'ON' : 'OFF'}
                 </Label>
               </div>
-              <p className="text-xs text-muted-foreground max-w-[240px]">
+              <p className="text-xs text-muted-foreground">
                 {production
                   ? 'Live Upstox orders are enabled for Nifty Options Scalp'
                   : 'Paper / dummy money mode — no real broker orders'}
@@ -87,6 +87,7 @@ export const TradingControls = ({
               checked={production}
               onCheckedChange={handleSwitchIntent}
               disabled={togglingLive}
+              className="shrink-0"
             />
           </div>
 

@@ -56,51 +56,55 @@ const StockList = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Nifty 50 Options</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Nifty 50 Options</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Live hedging universe for the Nifty Options Scalper
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing}>
+        <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing} className="w-full sm:w-auto">
           <RefreshCw className={cn('h-4 w-4 mr-2', syncing && 'animate-spin')} />
           Run morning sync
         </Button>
       </div>
 
-      <div className="bg-card border border-border rounded-lg overflow-hidden">
+      <div className="bg-card border border-border rounded-lg overflow-x-auto -mx-0">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Symbol</TableHead>
+              <TableHead className="whitespace-nowrap">Symbol</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Strike</TableHead>
-              <TableHead>Expiry</TableHead>
+              <TableHead className="hidden sm:table-cell">Expiry</TableHead>
               <TableHead>LTP</TableHead>
-              <TableHead>Lot</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="hidden md:table-cell">Lot</TableHead>
+              <TableHead className="hidden sm:table-cell">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {stocks.map((stock) => (
               <TableRow key={stock.id}>
-                <TableCell className="font-medium">{stock.trading_symbol}</TableCell>
+                <TableCell className="font-medium whitespace-nowrap text-xs sm:text-sm">
+                  {stock.trading_symbol}
+                </TableCell>
                 <TableCell>
                   <Badge variant={stock.instrument_type === 'CE' ? 'default' : 'secondary'}>
                     {stock.instrument_type}
                   </Badge>
                 </TableCell>
-                <TableCell>{(stock as { strike_price?: number }).strike_price ?? '—'}</TableCell>
-                <TableCell className="text-sm">
-                  {(stock as { expiry?: string }).expiry
-                    ? new Date((stock as { expiry?: string }).expiry!).toLocaleDateString()
+                <TableCell>{stock.strike_price ?? '—'}</TableCell>
+                <TableCell className="text-sm hidden sm:table-cell">
+                  {stock.expiry
+                    ? new Date(stock.expiry).toLocaleDateString()
                     : '—'}
                 </TableCell>
-                <TableCell>₹{Number(stock.ltp || 0).toFixed(2)}</TableCell>
-                <TableCell>{stock.lot_size}</TableCell>
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
+                  ₹{Number(stock.ltp || 0).toFixed(2)}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">{stock.lot_size}</TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <Badge variant="outline">Subscribed</Badge>
                 </TableCell>
               </TableRow>
@@ -116,15 +120,16 @@ const StockList = () => {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Showing {total === 0 ? 0 : (page - 1) * limit + 1} to{' '}
           {Math.min(page * limit, total)} of {total} contracts
         </p>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
+            className="flex-1 sm:flex-none"
             onClick={() => handlePageChange(page - 1)}
             disabled={page === 1}
           >
@@ -134,6 +139,7 @@ const StockList = () => {
           <Button
             variant="outline"
             size="sm"
+            className="flex-1 sm:flex-none"
             onClick={() => handlePageChange(page + 1)}
             disabled={page >= totalPages}
           >

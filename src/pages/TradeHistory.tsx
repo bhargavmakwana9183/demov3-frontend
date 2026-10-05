@@ -80,12 +80,12 @@ const TradeHistory = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Trade History</h1>
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Trade History</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Nifty 50 scalper trades · {trades.length} shown · Net P/L{' '}
+            {trades.length} trades · Net P/L{' '}
             <span
               className={cn(
                 'font-medium',
@@ -99,9 +99,9 @@ const TradeHistory = () => {
       </div>
 
       <Card className="bg-card border-border">
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="flex-1 min-w-[160px]">
+        <CardContent className="pt-4 sm:pt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div className="space-y-2">
               <Label htmlFor="fromDate">From Date</Label>
               <Input
                 id="fromDate"
@@ -110,7 +110,7 @@ const TradeHistory = () => {
                 onChange={(e) => setFromDate(e.target.value)}
               />
             </div>
-            <div className="flex-1 min-w-[160px]">
+            <div className="space-y-2">
               <Label htmlFor="toDate">To Date</Label>
               <Input
                 id="toDate"
@@ -123,7 +123,9 @@ const TradeHistory = () => {
               value={strategyFilter}
               onChange={handleStrategyChange}
             />
-            <Button onClick={handleFilter}>Apply Filter</Button>
+            <Button onClick={handleFilter} className="w-full">
+              Apply Filter
+            </Button>
           </div>
         </CardContent>
       </Card>
