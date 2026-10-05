@@ -64,6 +64,9 @@ export const stockAPI = {
     quantity: number;
     price: number;
   }) => api.post("/stocks/place-order", data),
+  /** Morning cron: ensure records + chain + hedging */
+  syncNiftyMorning: () => api.post("/instrument/nifty-scalp/sync-hedging"),
+  syncNiftyFull: () => api.post("/instrument/nifty-scalp/sync-hedging"),
   syncNiftyChain: () => api.post("/instrument/nifty-scalp/sync-chain"),
   syncNiftyHedging: () => api.post("/instrument/nifty-scalp/sync-hedging"),
 };
@@ -139,6 +142,10 @@ export const scalpingAPI = {
     applyBest?: boolean;
     params?: string;
   }) => api.post("/instrument/scalping-optimize", body),
+  /** Morning cron (nifty.chain.cron.ts): ensure + chain + hedging */
+  syncNiftyMorning: () => api.post("/instrument/nifty-scalp/sync-hedging"),
+  /** Chain only: ensure + syncNiftyOptionChain */
+  syncNiftyChainOnly: () => api.post("/instrument/nifty-scalp/sync-chain"),
 };
 
 export default api;

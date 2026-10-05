@@ -36,8 +36,7 @@ const StockList = () => {
   const handleSync = async () => {
     setSyncing(true);
     try {
-      await stockAPI.syncNiftyChain();
-      await stockAPI.syncNiftyHedging();
+      await stockAPI.syncNiftyMorning();
       toast.success('Nifty option chain & hedging synced');
       dispatch(fetchStocks({ page, limit }));
     } catch {
@@ -67,7 +66,7 @@ const StockList = () => {
         </div>
         <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing}>
           <RefreshCw className={cn('h-4 w-4 mr-2', syncing && 'animate-spin')} />
-          Sync Nifty Chain
+          Run morning sync
         </Button>
       </div>
 

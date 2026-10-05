@@ -19,7 +19,7 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { SOCKET_URL } from '@/lib/config';
-import { stockAPI } from '@/lib/api';
+import { NiftyDataSyncCard } from '@/components/Scalping/NiftyDataSyncCard';
 
 const REFRESH_MS = 30_000;
 
@@ -82,17 +82,6 @@ const ScalpingOverview = () => {
     }
   };
 
-  const handleSync = async (kind: 'chain' | 'hedging') => {
-    try {
-      if (kind === 'chain') await stockAPI.syncNiftyChain();
-      else await stockAPI.syncNiftyHedging();
-      toast.success(kind === 'chain' ? 'Nifty option chain synced' : 'Hedging options synced');
-      refresh();
-    } catch {
-      toast.error('Sync failed — check Upstox token');
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -105,12 +94,6 @@ const ScalpingOverview = () => {
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" asChild>
             <Link to="/dashboard">KPI Dashboard</Link>
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => handleSync('chain')}>
-            Sync Chain
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => handleSync('hedging')}>
-            Sync Hedging
           </Button>
           <Button
             variant="outline"
@@ -195,8 +178,14 @@ const ScalpingOverview = () => {
           )}
 
           <IssuesPanel issues={status.issues || []} />
+
+          <NiftyDataSyncCard onSyncComplete={refresh} />
         </>
       ) : null}
+
+      {!status && !statusLoading && !statusError && (
+        <NiftyDataSyncCard onSyncComplete={refresh} />
+      )}
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">Last 7 Days KPIs</h2>
