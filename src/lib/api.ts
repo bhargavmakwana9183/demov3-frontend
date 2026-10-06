@@ -64,6 +64,13 @@ export const stockAPI = {
     quantity: number;
     price: number;
   }) => api.post("/stocks/place-order", data),
+  /** Manual Nifty scalp test entry → Upstox (if live) + engine manages */
+  placeManualNiftyEntry: (data: {
+    hedging_option_id?: string;
+    instrument_key?: string;
+    lots: number;
+    buy_price?: number;
+  }) => api.post("/instrument/nifty-scalp/manual-entry", data),
   /** Morning cron: ensure records + chain + hedging */
   syncNiftyMorning: () => api.post("/instrument/nifty-scalp/sync-hedging"),
   syncNiftyFull: () => api.post("/instrument/nifty-scalp/sync-hedging"),
@@ -124,6 +131,12 @@ export const scalpingAPI = {
     api.post("/instrument/nifty-scalp/toggle-live", {
       production: production ?? true,
     }),
+  manualEntry: (data: {
+    hedging_option_id?: string;
+    instrument_key?: string;
+    lots: number;
+    buy_price?: number;
+  }) => api.post("/instrument/nifty-scalp/manual-entry", data),
   getAuditLog: (params: {
     days?: number;
     action?: string;

@@ -61,6 +61,36 @@ export const placeOrder = createAsyncThunk(
   }
 );
 
+export const placeManualNiftyOrder = createAsyncThunk(
+  "stock/placeManualNiftyOrder",
+  async (
+    orderData: {
+      hedgingOptionId?: string;
+      instrumentKey?: string;
+      lots: number;
+      buyPrice: number;
+    },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await stockAPI.placeManualNiftyEntry({
+        hedging_option_id: orderData.hedgingOptionId,
+        instrument_key: orderData.instrumentKey,
+        lots: orderData.lots,
+        buy_price: orderData.buyPrice,
+      });
+      return response.data;
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Manual entry failed";
+      return rejectWithValue(msg);
+    }
+  },
+);
+
 const stockSlice = createSlice({
   name: "stock",
   initialState,
@@ -91,6 +121,15 @@ const stockSlice = createSlice({
         state.orderPlacing = false;
       })
       .addCase(placeOrder.rejected, (state) => {
+        state.orderPlacing = false;
+      })
+      .addCase(placeManualNiftyOrder.pending, (state) => {
+        state.orderPlacing = true;
+      })
+      .addCase(placeManualNiftyOrder.fulfilled, (state) => {
+        state.orderPlacing = false;
+      })
+      .addCase(placeManualNiftyOrder.rejected, (state) => {
         state.orderPlacing = false;
       })
       .addCase(makeAsActiveStocks.pending, (state) => {
