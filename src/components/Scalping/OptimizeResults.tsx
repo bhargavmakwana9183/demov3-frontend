@@ -13,14 +13,15 @@ import {
   ParamOptimizationResult,
 } from '@/store/slices/scalpingSlice';
 import { CheckCircle2, XCircle } from 'lucide-react';
+import { formatMoney, formatPct, formatRatio, toNum } from '@/lib/format';
 
 const ParamRow = ({ row }: { row: ParamOptimizationResult }) => (
   <TableRow>
     <TableCell className="font-mono text-sm">{row.param}</TableCell>
     <TableCell>{row.currentValue}</TableCell>
     <TableCell className="font-medium">{row.bestValue}</TableCell>
-    <TableCell>{row.baselineProfitFactor.toFixed(2)}</TableCell>
-    <TableCell>{row.bestProfitFactor.toFixed(2)}</TableCell>
+    <TableCell>{formatRatio(row.baselineProfitFactor)}</TableCell>
+    <TableCell>{formatRatio(row.bestProfitFactor)}</TableCell>
     <TableCell>
       {row.improved ? (
         <Badge variant="default" className="gap-1">
@@ -42,7 +43,7 @@ interface OptimizeResultsProps {
 }
 
 export const OptimizeResults = ({ report }: OptimizeResultsProps) => {
-  const overrides = Object.entries(report.suggestedOverrides);
+  const overrides = Object.entries(report.suggestedOverrides ?? {});
 
   return (
     <div className="space-y-4">
@@ -55,27 +56,25 @@ export const OptimizeResults = ({ report }: OptimizeResultsProps) => {
             <p>
               Win rate:{' '}
               <span className="text-foreground font-medium">
-                {report.baseline.winRate.toFixed(1)}%
+                {formatPct(report.baseline?.winRate)}
               </span>
             </p>
             <p>
               Profit factor:{' '}
               <span className="text-foreground font-medium">
-                {report.baseline.profitFactor === Infinity
-                  ? '∞'
-                  : report.baseline.profitFactor.toFixed(2)}
+                {formatRatio(report.baseline?.profitFactor)}
               </span>
             </p>
             <p>
               Net P/L:{' '}
               <span className="text-foreground font-medium">
-                ₹{report.baseline.totalNetPl.toFixed(2)}
+                {formatMoney(report.baseline?.totalNetPl)}
               </span>
             </p>
             <p>
               Trades:{' '}
               <span className="text-foreground font-medium">
-                {report.baseline.totalTrades}
+                {toNum(report.baseline?.totalTrades)}
               </span>
             </p>
           </CardContent>
@@ -125,7 +124,7 @@ export const OptimizeResults = ({ report }: OptimizeResultsProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {report.paramResults.map((row) => (
+            {report.paramResults?.map((row) => (
               <ParamRow key={row.param} row={row} />
             ))}
           </TableBody>

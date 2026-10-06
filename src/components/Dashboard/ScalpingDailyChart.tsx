@@ -65,8 +65,14 @@ export const ScalpingDailyChart = ({ dailyStats }: ScalpingDailyChartProps) => {
               }}
               labelStyle={{ color: 'hsl(var(--popover-foreground))' }}
               formatter={(value: number, name: string) => {
-                if (name === 'profitLoss') return [`₹${value.toFixed(2)}`, 'P/L'];
-                return [value, name];
+                if (name === 'profitLoss') {
+                  const n = Number(value);
+                  return [
+                    `₹${(Number.isFinite(n) ? n : 0).toFixed(2)}`,
+                    'P/L',
+                  ];
+                }
+                return [value ?? 0, name];
               }}
             />
             <Line

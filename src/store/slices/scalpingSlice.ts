@@ -26,7 +26,8 @@ export interface ScalpingPerformance {
   wins: number;
   losses: number;
   winRate: number;
-  profitFactor: number;
+  /** null from API means Infinity (JSON-safe) */
+  profitFactor: number | null;
   avgWin: number;
   avgLoss: number;
   expectancy: number;
@@ -128,7 +129,7 @@ export interface BacktestResult {
   wins: number;
   losses: number;
   winRate: number;
-  profitFactor: number;
+  profitFactor: number | null;
   totalGrossPl: number;
   totalNetPl: number;
   maxDrawdown: number;
@@ -375,7 +376,36 @@ export const fetchScalpingPerformance = createAsyncThunk(
   "scalping/fetchPerformance",
   async (days: number) => {
     const response = await scalpingAPI.getPerformance(days, NIFTY_STRATEGY);
-    return { data: response.data.data as ScalpingPerformance, days };
+    const raw = (response.data.data ?? {}) as Partial<ScalpingPerformance>;
+    // JSON turns Infinity → null; normalize so KPI cards never crash
+    const data: ScalpingPerformance = {
+      periodDays: Number(raw.periodDays ?? days) || days,
+      strategyName: raw.strategyName ?? NIFTY_STRATEGY,
+      startDate: raw.startDate ?? "",
+      endDate: raw.endDate ?? "",
+      totalTrades: Number(raw.totalTrades ?? 0) || 0,
+      wins: Number(raw.wins ?? 0) || 0,
+      losses: Number(raw.losses ?? 0) || 0,
+      winRate: Number(raw.winRate ?? 0) || 0,
+      profitFactor:
+        raw.profitFactor == null
+          ? Number.POSITIVE_INFINITY
+          : Number(raw.profitFactor),
+      avgWin: Number(raw.avgWin ?? 0) || 0,
+      avgLoss: Number(raw.avgLoss ?? 0) || 0,
+      expectancy: Number(raw.expectancy ?? 0) || 0,
+      totalGrossPl: Number(raw.totalGrossPl ?? 0) || 0,
+      totalNetPl: Number(raw.totalNetPl ?? 0) || 0,
+      maxDrawdown: Number(raw.maxDrawdown ?? 0) || 0,
+      bestDay: raw.bestDay ?? null,
+      worstDay: raw.worstDay ?? null,
+      exitReasonBreakdown: raw.exitReasonBreakdown ?? {},
+      skipReasonBreakdown: Array.isArray(raw.skipReasonBreakdown)
+        ? raw.skipReasonBreakdown
+        : [],
+      dailyStats: Array.isArray(raw.dailyStats) ? raw.dailyStats : [],
+    };
+    return { data, days };
   },
 );
 

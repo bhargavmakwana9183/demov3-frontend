@@ -169,21 +169,24 @@ const TradeHistory = () => {
                   <TableCell>
                     <span
                       className={cn(
-                        trade.profitLoss >= 0 ? 'text-success' : 'text-danger',
+                        Number(trade.profitLoss ?? 0) >= 0
+                          ? 'text-success'
+                          : 'text-danger',
                       )}
                     >
-                      {trade.profitLoss >= 0 ? '+' : ''}₹
-                      {trade.profitLoss.toFixed(2)}
+                      {Number(trade.profitLoss ?? 0) >= 0 ? '+' : ''}₹
+                      {Number(trade.profitLoss ?? 0).toFixed(2)}
                     </span>
                   </TableCell>
                   <TableCell>
                     <span
                       className={cn(
                         'font-semibold',
-                        netPl >= 0 ? 'text-success' : 'text-danger',
+                        Number(netPl ?? 0) >= 0 ? 'text-success' : 'text-danger',
                       )}
                     >
-                      {netPl >= 0 ? '+' : ''}₹{netPl.toFixed(2)}
+                      {Number(netPl ?? 0) >= 0 ? '+' : ''}₹
+                      {Number(netPl ?? 0).toFixed(2)}
                     </span>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">

@@ -8,63 +8,76 @@ import {
   Percent,
   Wallet,
 } from 'lucide-react';
+import {
+  formatMoney,
+  formatMoneySigned,
+  formatPct,
+  formatRatio,
+  toNum,
+  toProfitFactor,
+} from '@/lib/format';
 
 interface ScalpingKpiCardsProps {
   performance: ScalpingPerformance;
 }
 
-const formatCurrency = (value: number) =>
-  `₹${Math.abs(value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-const formatRatio = (value: number) =>
-  value === Infinity ? '∞' : value.toFixed(2);
-
 export const ScalpingKpiCards = ({ performance }: ScalpingKpiCardsProps) => {
-  const netTrend = performance.totalNetPl >= 0 ? 'up' : 'down';
+  const totalNetPl = toNum(performance.totalNetPl);
+  const totalGrossPl = toNum(performance.totalGrossPl);
+  const expectancy = toNum(performance.expectancy);
+  const avgWin = toNum(performance.avgWin);
+  const avgLoss = toNum(performance.avgLoss);
+  const maxDrawdown = toNum(performance.maxDrawdown);
+  const winRate = toNum(performance.winRate);
+  const profitFactor = toProfitFactor(performance.profitFactor);
+  const wins = toNum(performance.wins);
+  const losses = toNum(performance.losses);
+  const totalTrades = toNum(performance.totalTrades);
+  const netTrend = totalNetPl >= 0 ? 'up' : 'down';
 
   return (
     <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
       <StatCard
         title="Win Rate"
-        value={`${performance.winRate.toFixed(1)}%`}
+        value={formatPct(winRate)}
         icon={Percent}
-        subtitle={`${performance.wins}W / ${performance.losses}L of ${performance.totalTrades}`}
+        subtitle={`${wins}W / ${losses}L of ${totalTrades}`}
       />
       <StatCard
         title="Profit Factor"
-        value={formatRatio(performance.profitFactor)}
+        value={formatRatio(profitFactor)}
         icon={BarChart3}
-        trend={performance.profitFactor >= 1 ? 'up' : 'down'}
+        trend={Number.isFinite(profitFactor) && profitFactor >= 1 ? 'up' : 'down'}
         subtitle="Gross wins ÷ gross losses"
       />
       <StatCard
         title="Expectancy"
-        value={formatCurrency(performance.expectancy)}
+        value={formatMoney(expectancy)}
         icon={Target}
-        trend={performance.expectancy >= 0 ? 'up' : 'down'}
+        trend={expectancy >= 0 ? 'up' : 'down'}
         subtitle="Per-trade expected P/L"
       />
       <StatCard
         title="Net P/L"
-        value={`${performance.totalNetPl >= 0 ? '+' : '-'}${formatCurrency(performance.totalNetPl)}`}
+        value={formatMoneySigned(totalNetPl)}
         icon={Wallet}
         trend={netTrend}
-        subtitle={`Gross: ${formatCurrency(performance.totalGrossPl)}`}
+        subtitle={`Gross: ${formatMoney(totalGrossPl)}`}
       />
       <StatCard
         title="Avg Win / Loss"
-        value={`${formatCurrency(performance.avgWin)}`}
+        value={formatMoney(avgWin)}
         icon={TrendingUp}
         trend="up"
-        subtitle={`Loss: ${formatCurrency(performance.avgLoss)}`}
+        subtitle={`Loss: ${formatMoney(avgLoss)}`}
       />
       <StatCard
         title="Max Drawdown"
-        value={formatCurrency(performance.maxDrawdown)}
+        value={formatMoney(maxDrawdown)}
         icon={TrendingDown}
         trend="down"
         subtitle={
-          performance.bestDay
+          performance.bestDay?.date
             ? `Best: ${performance.bestDay.date}`
             : 'No closed trades yet'
         }
