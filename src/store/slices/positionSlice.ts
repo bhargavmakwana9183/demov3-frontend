@@ -11,13 +11,16 @@ export interface Position {
   symbol: string;
   buyPrice: number;
   currentLTP: number;
+  markPrice?: number;
   quantity: number;
+  lots?: number;
+  lot_size?: number;
   profitLoss: number;
   netPl: number;
   charges: number;
   status: "in_trade" | "closed";
   entryDate: string;
-  sellPrice: number;
+  sellPrice: number | null;
   target: number;
   stopploss: number;
   highest_ltp?: number;
@@ -26,6 +29,8 @@ export interface Position {
   exit_reason?: string | null;
   trade_time: string;
   legCount?: number;
+  live?: boolean;
+  updatedAt?: string;
 }
 
 interface PositionState {
@@ -34,6 +39,8 @@ interface PositionState {
   includeClosed: boolean;
   loading: boolean;
   error: string | null;
+  socketConnected: boolean;
+  lastSocketAt: string | null;
 }
 
 const initialState: PositionState = {
@@ -42,6 +49,8 @@ const initialState: PositionState = {
   includeClosed: false,
   loading: false,
   error: null,
+  socketConnected: false,
+  lastSocketAt: null,
 };
 
 export const fetchCurrentPositions = createAsyncThunk(
@@ -67,6 +76,11 @@ export const fetchCurrentPositions = createAsyncThunk(
   },
 );
 
+const matchesFilter = (
+  strategyName: string | undefined,
+  filter: StrategyFilterValue,
+) => filter === "all" || strategyName === filter;
+
 const positionSlice = createSlice({
   name: "position",
   initialState,
@@ -80,21 +94,81 @@ const positionSlice = createSlice({
     setIncludeClosedPositions: (state, action: PayloadAction<boolean>) => {
       state.includeClosed = action.payload;
     },
+    setPositionsSocketConnected: (state, action: PayloadAction<boolean>) => {
+      state.socketConnected = action.payload;
+    },
     updatePositionFromSocket: (state, action) => {
-      const updates = action.payload.data;
+      const updates = action.payload?.data;
       if (!Array.isArray(updates)) return;
 
-      const positionMap = new Map(state.positions.map((p) => [p.id, p]));
-      updates.forEach((updated: Partial<Position> & { id: string }) => {
-        if (positionMap.has(updated.id)) {
-          Object.assign(positionMap.get(updated.id)!, updated);
-        } else if (
-          state.strategyFilter === "all" ||
-          updated.strategy_name === state.strategyFilter
-        ) {
-          state.positions.push(updated as Position);
+      state.lastSocketAt = new Date().toISOString();
+      const byId = new Map(state.positions.map((p) => [String(p.id), p]));
+
+      for (const raw of updates) {
+        if (!raw?.id) continue;
+        const updated = raw as Partial<Position> & { id: string };
+        const id = String(updated.id);
+
+        if (!matchesFilter(updated.strategy_name, state.strategyFilter)) {
+          continue;
         }
-      });
+        if (!state.includeClosed && updated.status === "closed") {
+          // Drop closed from list when toggle is off
+          if (byId.has(id)) {
+            state.positions = state.positions.filter((p) => String(p.id) !== id);
+            byId.delete(id);
+          }
+          continue;
+        }
+
+        const existing = byId.get(id);
+        if (existing) {
+          // Merge live fields; keep legCount from REST if socket omits it
+          Object.assign(existing, {
+            ...updated,
+            buyPrice: Number(updated.buyPrice ?? existing.buyPrice),
+            currentLTP: Number(updated.currentLTP ?? existing.currentLTP),
+            markPrice: Number(
+              updated.markPrice ?? updated.currentLTP ?? existing.markPrice,
+            ),
+            sellPrice:
+              updated.sellPrice === undefined
+                ? existing.sellPrice
+                : updated.sellPrice,
+            profitLoss: Number(updated.profitLoss ?? existing.profitLoss),
+            netPl: Number(updated.netPl ?? existing.netPl),
+            charges: Number(updated.charges ?? existing.charges),
+            quantity: Number(updated.quantity ?? existing.quantity),
+            target: Number(updated.target ?? existing.target),
+            stopploss: Number(updated.stopploss ?? existing.stopploss),
+            highest_ltp: Number(
+              updated.highest_ltp ?? existing.highest_ltp ?? 0,
+            ),
+            legCount: updated.legCount ?? existing.legCount,
+            live: updated.live ?? true,
+            updatedAt: updated.updatedAt || new Date().toISOString(),
+          });
+        } else if (
+          state.includeClosed ||
+          updated.status === "in_trade" ||
+          !updated.status
+        ) {
+          const next = {
+            ...updated,
+            buyPrice: Number(updated.buyPrice || 0),
+            currentLTP: Number(updated.currentLTP || 0),
+            profitLoss: Number(updated.profitLoss || 0),
+            netPl: Number(updated.netPl || 0),
+            charges: Number(updated.charges || 0),
+            quantity: Number(updated.quantity || 0),
+            sellPrice:
+              updated.sellPrice === undefined ? null : updated.sellPrice,
+            live: true,
+          } as Position;
+          state.positions.unshift(next);
+          byId.set(id, next);
+        }
+      }
     },
     resetPositions: (state) => {
       state.positions = [];
@@ -127,5 +201,6 @@ export const {
   resetPositions,
   setPositionStrategyFilter,
   setIncludeClosedPositions,
+  setPositionsSocketConnected,
 } = positionSlice.actions;
 export default positionSlice.reducer;
