@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   fetchTradeHistory,
@@ -7,6 +7,7 @@ import {
 } from '@/store/slices/tradeHistorySlice';
 import { StrategyFilter } from '@/components/Trades/StrategyFilter';
 import { ExitReasonBadge } from '@/components/Trades/ExitReasonBadge';
+import { TradeLegHistory } from '@/components/Trades/TradeLegHistory';
 import {
   Table,
   TableBody,
@@ -150,53 +151,69 @@ const TradeHistory = () => {
           <TableBody>
             {trades.map((trade) => {
               const netPl = trade.netPl ?? trade.profitLoss;
+              const hasLegs = (trade.legCount ?? 0) > 0;
               return (
-                <TableRow key={trade.id}>
-                  <TableCell className="whitespace-nowrap">
-                    {new Date(trade.date).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="font-medium">{trade.symbol}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="font-normal">
-                      {trade.strategy_name ?? '—'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {trade.instrument_type ?? '—'}
-                  </TableCell>
-                  <TableCell>₹{trade.buyPrice?.toFixed(2)}</TableCell>
-                  <TableCell>₹{trade.sellPrice?.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <span
-                      className={cn(
-                        Number(trade.profitLoss ?? 0) >= 0
-                          ? 'text-success'
-                          : 'text-danger',
-                      )}
-                    >
-                      {Number(trade.profitLoss ?? 0) >= 0 ? '+' : ''}₹
-                      {Number(trade.profitLoss ?? 0).toFixed(2)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={cn(
-                        'font-semibold',
-                        Number(netPl ?? 0) >= 0 ? 'text-success' : 'text-danger',
-                      )}
-                    >
-                      {Number(netPl ?? 0) >= 0 ? '+' : ''}₹
-                      {Number(netPl ?? 0).toFixed(2)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    ₹{(trade.charges ?? 0).toFixed(2)}
-                  </TableCell>
-                  <TableCell>
-                    <ExitReasonBadge reason={trade.exit_reason} />
-                  </TableCell>
-                  <TableCell className="capitalize">{trade.status}</TableCell>
-                </TableRow>
+                <Fragment key={trade.id}>
+                  <TableRow>
+                    <TableCell className="whitespace-nowrap">
+                      {new Date(trade.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="font-medium">{trade.symbol}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="font-normal">
+                        {trade.strategy_name ?? '—'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {trade.instrument_type ?? '—'}
+                    </TableCell>
+                    <TableCell>₹{trade.buyPrice?.toFixed(2)}</TableCell>
+                    <TableCell>₹{trade.sellPrice?.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <span
+                        className={cn(
+                          Number(trade.profitLoss ?? 0) >= 0
+                            ? 'text-success'
+                            : 'text-danger',
+                        )}
+                      >
+                        {Number(trade.profitLoss ?? 0) >= 0 ? '+' : ''}₹
+                        {Number(trade.profitLoss ?? 0).toFixed(2)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={cn(
+                          'font-semibold',
+                          Number(netPl ?? 0) >= 0
+                            ? 'text-success'
+                            : 'text-danger',
+                        )}
+                      >
+                        {Number(netPl ?? 0) >= 0 ? '+' : ''}₹
+                        {Number(netPl ?? 0).toFixed(2)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      ₹{(trade.charges ?? 0).toFixed(2)}
+                    </TableCell>
+                    <TableCell>
+                      <ExitReasonBadge reason={trade.exit_reason} />
+                    </TableCell>
+                    <TableCell className="capitalize">{trade.status}</TableCell>
+                  </TableRow>
+                  {hasLegs && (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell colSpan={11} className="py-1 bg-muted/10">
+                        <TradeLegHistory
+                          tradeId={String(trade.id)}
+                          tradeUuid={trade.tradeUuid}
+                          legCount={trade.legCount}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </Fragment>
               );
             })}
           </TableBody>

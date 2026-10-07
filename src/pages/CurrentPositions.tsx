@@ -8,6 +8,7 @@ import {
 } from '@/store/slices/positionSlice';
 import { StrategyFilter } from '@/components/Trades/StrategyFilter';
 import { ExitReasonBadge } from '@/components/Trades/ExitReasonBadge';
+import { TradeLegHistory } from '@/components/Trades/TradeLegHistory';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -234,6 +235,17 @@ const CurrentPositions = () => {
                     </div>
                   </div>
                 </div>
+
+                {(position.legCount ?? 0) > 0 && (
+                  <div className="pt-1 border-t border-border">
+                    <TradeLegHistory
+                      tradeId={String(position.id)}
+                      tradeUuid={position.tradeUuid}
+                      legCount={position.legCount}
+                      compact
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           );

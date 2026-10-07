@@ -7,6 +7,7 @@ import {
 
 export interface Position {
   id: string;
+  tradeUuid?: string;
   symbol: string;
   buyPrice: number;
   currentLTP: number;
@@ -24,6 +25,7 @@ export interface Position {
   instrument_type?: string;
   exit_reason?: string | null;
   trade_time: string;
+  legCount?: number;
 }
 
 interface PositionState {

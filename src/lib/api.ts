@@ -100,6 +100,10 @@ export const tradeHistoryAPI = {
       params.append("strategy_name", options.strategy_name);
     return api.get(`/instrument/trade-history-list?${params.toString()}`);
   },
+  getLegHistory: (tradeId: string) =>
+    api.get("/instrument/trade-leg-history", {
+      params: { trade_id: tradeId },
+    }),
 };
 
 // Auth APIs

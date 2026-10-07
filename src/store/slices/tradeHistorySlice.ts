@@ -7,6 +7,7 @@ import {
 
 export interface Trade {
   id: string;
+  tradeUuid?: string;
   date: string;
   symbol: string;
   strategy_name?: string;
@@ -22,6 +23,7 @@ export interface Trade {
   target: number;
   exit_reason?: string | null;
   status: string;
+  legCount?: number;
 }
 
 interface TradeHistoryState {
