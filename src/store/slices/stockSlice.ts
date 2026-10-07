@@ -35,10 +35,18 @@ const initialState: StockState = {
 
 export const fetchStocks = createAsyncThunk(
   "stock/fetchStocks",
-  async ({ page, limit }: { page: number; limit: number }) => {
+  async ({
+    page,
+    limit,
+    silent = false,
+  }: {
+    page: number;
+    limit: number;
+    silent?: boolean;
+  }) => {
     const response = await stockAPI.getStocks(page, limit);
-    return response.data;
-  }
+    return { ...(response.data || {}), silent };
+  },
 );
 export const makeAsActiveStocks = createAsyncThunk(
   "stock/makeAsActiveStocks",
@@ -101,14 +109,18 @@ const stockSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchStocks.pending, (state) => {
-        state.loading = true;
+      .addCase(fetchStocks.pending, (state, action) => {
+        // Silent auto-refresh keeps existing rows visible (no full-page flash)
+        if (!action.meta.arg?.silent) {
+          state.loading = true;
+        }
         state.error = null;
       })
       .addCase(fetchStocks.fulfilled, (state, action) => {
         state.loading = false;
-        state.stocks = action.payload.data;
-        state.total = action.payload.pagination?.total ?? action.payload.total ?? 0;
+        state.stocks = action.payload.data || [];
+        state.total =
+          action.payload.pagination?.total ?? action.payload.total ?? 0;
       })
       .addCase(fetchStocks.rejected, (state, action) => {
         state.loading = false;
