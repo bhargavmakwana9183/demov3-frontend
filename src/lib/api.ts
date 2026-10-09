@@ -104,6 +104,11 @@ export const tradeHistoryAPI = {
     api.get("/instrument/trade-leg-history", {
       params: { trade_id: tradeId },
     }),
+  eodDecision: (tradeId: string, action: "carry" | "sell") =>
+    api.post("/instrument/nifty-scalp/eod-decision", {
+      trade_id: tradeId,
+      action,
+    }),
 };
 
 // Auth APIs

@@ -29,6 +29,7 @@ export interface Position {
   exit_reason?: string | null;
   trade_time: string;
   legCount?: number;
+  eodDecision?: string | null;
   live?: boolean;
   updatedAt?: string;
 }

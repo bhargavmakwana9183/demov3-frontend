@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
+import { tradeHistoryAPI } from '@/lib/api';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   fetchCurrentPositions,
@@ -19,6 +20,7 @@ import { TrendingUp, TrendingDown, RefreshCw, Radio } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_URL } from '@/lib/config';
+import { toast } from 'sonner';
 import { StrategyFilterValue } from '@/lib/tradeFormat';
 import { cn } from '@/lib/utils';
 
@@ -38,6 +40,7 @@ const CurrentPositions = () => {
     lastSocketAt,
   } = useAppSelector((state) => state.position);
   const [flashIds, setFlashIds] = useState<Record<string, 'up' | 'down'>>({});
+  const [eodBusyId, setEodBusyId] = useState<string | null>(null);
   const prevLtp = useRef<Record<string, number>>({});
 
   const loadPositions = useCallback(() => {
@@ -111,6 +114,30 @@ const CurrentPositions = () => {
 
   const handleIncludeClosedChange = (checked: boolean) => {
     dispatch(setIncludeClosedPositions(checked));
+  };
+
+  const handleEodChoice = async (
+    tradeId: string,
+    action: 'carry' | 'sell',
+  ) => {
+    setEodBusyId(tradeId);
+    try {
+      await tradeHistoryAPI.eodDecision(tradeId, action);
+      toast(
+        action === 'carry'
+          ? 'Trade will be carried overnight'
+          : 'Manual sell sent',
+      );
+      loadPositions();
+    } catch {
+      toast.error(
+        action === 'carry'
+          ? 'Could not mark carry forward'
+          : 'Manual sell was not confirmed',
+      );
+    } finally {
+      setEodBusyId(null);
+    }
   };
 
   if (loading && positions.length === 0) {
@@ -352,6 +379,46 @@ const CurrentPositions = () => {
                     </div>
                   </div>
                 </div>
+
+                {isOpen && position.eodDecision === 'REQUIRED' && (
+                  <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 space-y-2">
+                    <p className="text-xs">
+                      After 3:10 this trade is ₹500 or more in loss. Carry it
+                      overnight or sell it now.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        disabled={eodBusyId === String(position.id)}
+                        onClick={() =>
+                          handleEodChoice(String(position.id), 'carry')
+                        }
+                      >
+                        Carry forward
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="flex-1"
+                        disabled={eodBusyId === String(position.id)}
+                        onClick={() =>
+                          handleEodChoice(String(position.id), 'sell')
+                        }
+                      >
+                        Manual sell
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {isOpen && position.eodDecision === 'CARRY' && (
+                  <p className="text-xs text-muted-foreground">
+                    Marked to carry forward. Target, add-lot, and Plan B still
+                    run.
+                  </p>
+                )}
 
                 {(position.legCount ?? 0) > 0 && (
                   <div className="pt-1 border-t border-border">
