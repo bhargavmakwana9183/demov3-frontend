@@ -149,7 +149,8 @@ export const scalpingAPI = {
   getAuditLog: (params: {
     days?: number;
     action?: string;
-    limit?: number;
+    pageIndex?: number;
+    pageSize?: number;
   }) => api.get("/instrument/nifty-scalp/audit", { params }),
   runBacktest: (body: {
     startDate: string;

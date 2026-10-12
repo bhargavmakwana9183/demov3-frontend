@@ -228,7 +228,8 @@ export interface AuditSkipBreakdownRow {
 export interface AuditLogFilters {
   days: number;
   action: string;
-  limit: number;
+  pageIndex: number;
+  pageSize: number;
 }
 
 interface ScalpingState {
@@ -237,6 +238,8 @@ interface ScalpingState {
   auditLogs: AuditLogEntry[];
   auditSkipBreakdown: AuditSkipBreakdownRow[];
   auditFilters: AuditLogFilters;
+  auditTotal: number;
+  auditTotalPages: number;
   mode: TradingMode;
   isLive: boolean;
   production: boolean;
@@ -263,7 +266,9 @@ const initialState: ScalpingState = {
   status: null,
   auditLogs: [],
   auditSkipBreakdown: [],
-  auditFilters: { days: 7, action: "", limit: 100 },
+  auditFilters: { days: 7, action: "", pageIndex: 1, pageSize: 20 },
+  auditTotal: 0,
+  auditTotalPages: 1,
   mode: "paper",
   isLive: false,
   production: false,
@@ -471,10 +476,15 @@ export const fetchScalpingAuditLog = createAsyncThunk(
     const response = await scalpingAPI.getAuditLog({
       days: filters.days,
       action: filters.action || undefined,
-      limit: filters.limit,
+      pageIndex: filters.pageIndex,
+      pageSize: filters.pageSize,
     });
     const data = response.data.data as {
       logs?: AuditLogEntry[];
+      total?: number;
+      pageIndex?: number;
+      pageSize?: number;
+      totalPages?: number;
       skipBreakdown?: Array<{ reason?: string; count?: number | string }>;
     };
     const logs = data.logs ?? [];
@@ -483,7 +493,21 @@ export const fetchScalpingAuditLog = createAsyncThunk(
         reason: row.reason ?? "UNKNOWN",
         count: Number(row.count ?? 0),
       })) ?? buildSkipBreakdown(logs);
-    return { logs, skipBreakdown, filters };
+    const pageSize = Number(data.pageSize ?? filters.pageSize ?? 20);
+    const total = Number(data.total ?? logs.length);
+    return {
+      logs,
+      skipBreakdown,
+      filters: {
+        ...filters,
+        pageIndex: Number(data.pageIndex ?? filters.pageIndex ?? 1),
+        pageSize,
+      },
+      total,
+      totalPages: Number(
+        data.totalPages ?? Math.max(1, Math.ceil(total / pageSize)),
+      ),
+    };
   },
 );
 
@@ -640,6 +664,8 @@ const scalpingSlice = createSlice({
         state.auditLogs = action.payload.logs;
         state.auditSkipBreakdown = action.payload.skipBreakdown;
         state.auditFilters = action.payload.filters;
+        state.auditTotal = action.payload.total;
+        state.auditTotalPages = action.payload.totalPages;
       })
       .addCase(fetchScalpingAuditLog.rejected, (state, action) => {
         state.auditLoading = false;

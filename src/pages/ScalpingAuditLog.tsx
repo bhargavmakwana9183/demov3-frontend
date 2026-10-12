@@ -19,10 +19,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { RefreshCw } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  RefreshCw,
+} from 'lucide-react';
 
 const DAY_OPTIONS = [1, 7, 14, 30];
-const LIMIT_OPTIONS = [50, 100, 200, 500];
+const PAGE_SIZE_OPTIONS = [20, 50, 100];
 const ACTION_OPTIONS = [
   { value: 'all', label: 'All actions' },
   { value: 'SKIP', label: 'SKIP' },
@@ -48,6 +54,8 @@ const ScalpingAuditLog = () => {
     auditLogs,
     auditSkipBreakdown,
     auditFilters,
+    auditTotal,
+    auditTotalPages,
     auditLoading,
     auditError,
   } = useAppSelector((state) => state.scalping);
@@ -56,7 +64,9 @@ const ScalpingAuditLog = () => {
   const [localAction, setLocalAction] = useState(
     auditFilters.action || 'all',
   );
-  const [localLimit, setLocalLimit] = useState(String(auditFilters.limit));
+  const [localPageSize, setLocalPageSize] = useState(
+    String(auditFilters.pageSize),
+  );
 
   const loadLogs = (overrides?: Partial<AuditLogFilters>) => {
     const filters: AuditLogFilters = {
@@ -67,21 +77,32 @@ const ScalpingAuditLog = () => {
           : localAction === 'all'
             ? ''
             : localAction,
-      limit: overrides?.limit ?? Number(localLimit),
+      pageIndex: overrides?.pageIndex ?? 1,
+      pageSize: overrides?.pageSize ?? Number(localPageSize),
     };
     dispatch(setAuditFilters(filters));
     dispatch(fetchScalpingAuditLog(filters));
   };
 
   useEffect(() => {
-    dispatch(
-      fetchScalpingAuditLog({
-        days: auditFilters.days,
-        action: auditFilters.action,
-        limit: auditFilters.limit,
-      }),
-    );
+    dispatch(fetchScalpingAuditLog(auditFilters));
+    // Load the saved page once. Later pages go through loadLogs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
+
+  const handlePageChange = (nextPage: number) => {
+    const page = Math.min(Math.max(1, nextPage), auditTotalPages);
+    loadLogs({
+      days: auditFilters.days,
+      action: auditFilters.action,
+      pageIndex: page,
+      pageSize: auditFilters.pageSize,
+    });
+  };
+
+  const from =
+    auditTotal === 0 ? 0 : (auditFilters.pageIndex - 1) * auditFilters.pageSize + 1;
+  const to = Math.min(auditFilters.pageIndex * auditFilters.pageSize, auditTotal);
 
   const handleApply = () => loadLogs();
 
@@ -130,13 +151,13 @@ const ScalpingAuditLog = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Limit</Label>
-              <Select value={localLimit} onValueChange={setLocalLimit}>
+              <Label>Page size</Label>
+              <Select value={localPageSize} onValueChange={setLocalPageSize}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {LIMIT_OPTIONS.map((n) => (
+                  {PAGE_SIZE_OPTIONS.map((n) => (
                     <SelectItem key={n} value={String(n)}>
                       {n} rows
                     </SelectItem>
@@ -174,11 +195,60 @@ const ScalpingAuditLog = () => {
       ) : (
         <>
           <AuditSkipSummary breakdown={auditSkipBreakdown} />
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Showing {auditLogs.length} entries (max {auditFilters.limit})
-            </p>
+          <div className="space-y-3">
             <AuditLogTable logs={auditLogs} />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Showing {from}–{to} of {auditTotal} · Page{' '}
+                {auditFilters.pageIndex} / {auditTotalPages}
+              </p>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 sm:flex-none"
+                  onClick={() => handlePageChange(1)}
+                  disabled={auditFilters.pageIndex <= 1 || auditLoading}
+                  title="First page"
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 sm:flex-none"
+                  onClick={() => handlePageChange(auditFilters.pageIndex - 1)}
+                  disabled={auditFilters.pageIndex <= 1 || auditLoading}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Prev
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 sm:flex-none"
+                  onClick={() => handlePageChange(auditFilters.pageIndex + 1)}
+                  disabled={
+                    auditFilters.pageIndex >= auditTotalPages || auditLoading
+                  }
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 sm:flex-none"
+                  onClick={() => handlePageChange(auditTotalPages)}
+                  disabled={
+                    auditFilters.pageIndex >= auditTotalPages || auditLoading
+                  }
+                  title="Last page"
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </>
       )}
