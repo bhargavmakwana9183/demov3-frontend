@@ -261,6 +261,11 @@ const CurrentPositions = () => {
                         LIVE
                       </Badge>
                     )}
+                    {position.planBStarted && (
+                      <Badge className="text-xs bg-amber-500 text-black hover:bg-amber-500">
+                        Plan B
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <Badge

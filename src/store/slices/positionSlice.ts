@@ -30,6 +30,7 @@ export interface Position {
   trade_time: string;
   legCount?: number;
   eodDecision?: string | null;
+  planBStarted?: boolean;
   live?: boolean;
   updatedAt?: string;
 }

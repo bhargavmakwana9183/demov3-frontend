@@ -57,6 +57,7 @@ export interface NiftyTradeSnapshot {
   charges?: number;
   is_active?: boolean;
   exit_reason?: string | null;
+  plan_b_started?: boolean;
 }
 
 export interface NiftyScalpConfigSnapshot {
@@ -186,7 +187,10 @@ export type AuditAction =
   | "RECONCILE"
   | "SIGNAL_EVAL"
   | "ADD_LOT"
+  | "PLAN_B_START"
+  | "PLAN_B_REBUY"
   | "PLAN_B_SCALP"
+  | "PLAN_B_MAX_LOSS"
   | "TARGET_HIT"
   | "CARRY_FORWARD"
   | "ENTRY_FILLED"

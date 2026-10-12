@@ -189,7 +189,8 @@ const Dashboard = () => {
         </div>
         {status?.openPosition && status.trade && (
           <p className="text-sm text-muted-foreground">
-            Open now: <strong>{status.trade.trading_symbol}</strong> · Net ₹
+            Open now: <strong>{status.trade.trading_symbol}</strong>
+            {status.trade.plan_b_started ? ' · Plan B' : ''} · Net ₹
             {Number(status.trade.net_pl ?? status.trade.pl ?? 0).toFixed(2)} ·
             Charges ₹{Number(status.trade.charges ?? 0).toFixed(2)}
           </p>

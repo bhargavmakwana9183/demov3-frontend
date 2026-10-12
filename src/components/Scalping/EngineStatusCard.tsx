@@ -80,10 +80,17 @@ export const EngineStatusCard = ({ status }: EngineStatusCardProps) => {
 
         {trade && (
           <div className="rounded-lg border border-border p-3 text-sm space-y-2">
-            <p className="font-medium truncate">
-              {trade.trading_symbol || 'Active trade'}{' '}
-              {trade.instrument_type ? `(${trade.instrument_type})` : ''}
-            </p>
+            <div className="font-medium truncate flex items-center gap-2">
+              <span>
+                {trade.trading_symbol || 'Active trade'}{' '}
+                {trade.instrument_type ? `(${trade.instrument_type})` : ''}
+              </span>
+              {trade.plan_b_started && (
+                <Badge className="text-xs bg-amber-500 text-black hover:bg-amber-500">
+                  Plan B
+                </Badge>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-2 text-muted-foreground">
               <span>Buy ₹{Number(trade.buy_price ?? 0).toFixed(2)}</span>
               <span>LTP ₹{Number(trade.ltp ?? 0).toFixed(2)}</span>

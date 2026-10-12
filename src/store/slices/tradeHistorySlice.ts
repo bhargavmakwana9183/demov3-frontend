@@ -22,6 +22,7 @@ export interface Trade {
   stopplose: number;
   target: number;
   exit_reason?: string | null;
+  planBStarted?: boolean;
   status: string;
   legCount?: number;
 }

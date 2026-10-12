@@ -158,7 +158,16 @@ const TradeHistory = () => {
                     <TableCell className="whitespace-nowrap">
                       {new Date(trade.date).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="font-medium">{trade.symbol}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <span>{trade.symbol}</span>
+                        {trade.planBStarted && (
+                          <Badge className="text-xs bg-amber-500 text-black hover:bg-amber-500">
+                            Plan B
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="font-normal">
                         {trade.strategy_name ?? '—'}
