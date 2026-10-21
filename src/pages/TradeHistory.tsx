@@ -8,6 +8,7 @@ import {
 import { StrategyFilter } from '@/components/Trades/StrategyFilter';
 import { ExitReasonBadge } from '@/components/Trades/ExitReasonBadge';
 import { TradeLegHistory } from '@/components/Trades/TradeLegHistory';
+import { HedgeLegSummary } from '@/components/Trades/HedgeLegSummary';
 import {
   Table,
   TableBody,
@@ -211,6 +212,13 @@ const TradeHistory = () => {
                     </TableCell>
                     <TableCell className="capitalize">{trade.status}</TableCell>
                   </TableRow>
+                  {trade.hedgeSymbol && (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell colSpan={11} className="py-2 bg-muted/10">
+                        <HedgeLegSummary hedge={trade} compact />
+                      </TableCell>
+                    </TableRow>
+                  )}
                   {hasLegs && (
                     <TableRow className="hover:bg-transparent">
                       <TableCell colSpan={11} className="py-1 bg-muted/10">

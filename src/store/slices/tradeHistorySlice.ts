@@ -23,6 +23,13 @@ export interface Trade {
   target: number;
   exit_reason?: string | null;
   planBStarted?: boolean;
+  hedgeSymbol?: string | null;
+  hedgeBuy?: number | null;
+  hedgeLtp?: number | null;
+  hedgeLots?: number | null;
+  hedgeGross?: number | null;
+  hedgeCharges?: number | null;
+  hedgeNet?: number | null;
   status: string;
   legCount?: number;
 }

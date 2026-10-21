@@ -31,6 +31,14 @@ export interface Position {
   legCount?: number;
   eodDecision?: string | null;
   planBStarted?: boolean;
+  mainNet?: number;
+  hedgeSymbol?: string | null;
+  hedgeBuy?: number | null;
+  hedgeLtp?: number | null;
+  hedgeLots?: number | null;
+  hedgeGross?: number | null;
+  hedgeCharges?: number | null;
+  hedgeNet?: number | null;
   live?: boolean;
   updatedAt?: string;
 }
@@ -139,6 +147,13 @@ const positionSlice = createSlice({
                 : updated.sellPrice,
             profitLoss: Number(updated.profitLoss ?? existing.profitLoss),
             netPl: Number(updated.netPl ?? existing.netPl),
+            mainNet: Number(updated.mainNet ?? existing.mainNet ?? 0),
+            hedgeLtp: Number(updated.hedgeLtp ?? existing.hedgeLtp ?? 0),
+            hedgeGross: Number(updated.hedgeGross ?? existing.hedgeGross ?? 0),
+            hedgeCharges: Number(
+              updated.hedgeCharges ?? existing.hedgeCharges ?? 0,
+            ),
+            hedgeNet: Number(updated.hedgeNet ?? existing.hedgeNet ?? 0),
             charges: Number(updated.charges ?? existing.charges),
             quantity: Number(updated.quantity ?? existing.quantity),
             target: Number(updated.target ?? existing.target),

@@ -11,6 +11,7 @@ import {
 import { StrategyFilter } from '@/components/Trades/StrategyFilter';
 import { ExitReasonBadge } from '@/components/Trades/ExitReasonBadge';
 import { TradeLegHistory } from '@/components/Trades/TradeLegHistory';
+import { HedgeLegSummary } from '@/components/Trades/HedgeLegSummary';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -345,6 +346,10 @@ const CurrentPositions = () => {
                   </div>
                 )}
 
+                {position.hedgeSymbol && (
+                  <HedgeLegSummary hedge={position} compact />
+                )}
+
                 <div className="pt-2 border-t border-border space-y-1">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">
@@ -362,9 +367,29 @@ const CurrentPositions = () => {
                       {formatMoney(position.profitLoss)}
                     </span>
                   </div>
+                  {position.hedgeSymbol && (
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">Main net</p>
+                      <span
+                        className={cn(
+                          'text-sm font-medium tabular-nums',
+                          Number(position.mainNet ?? 0) >= 0
+                            ? 'text-success'
+                            : 'text-danger',
+                        )}
+                      >
+                        {Number(position.mainNet ?? 0) >= 0 ? '+' : ''}
+                        {formatMoney(position.mainNet)}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">
-                      {isOpen ? 'Net P/L (live)' : 'Net P/L'}
+                      {position.hedgeSymbol
+                        ? 'Combined net'
+                        : isOpen
+                          ? 'Net P/L (live)'
+                          : 'Net P/L'}
                     </p>
                     <div
                       className={cn(
