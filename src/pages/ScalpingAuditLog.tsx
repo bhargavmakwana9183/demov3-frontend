@@ -46,6 +46,20 @@ const ACTION_OPTIONS = [
   { value: 'CARRY_FORWARD', label: 'CARRY_FORWARD' },
   { value: 'HOLD', label: 'HOLD' },
   { value: 'LIVE_ORDER_FAIL', label: 'LIVE_ORDER_FAIL' },
+  { value: 'ENTRY_ATTEMPT', label: 'ENTRY_ATTEMPT (why it bought)' },
+  { value: 'EXIT_DECISION', label: 'EXIT_DECISION (why it sold)' },
+  { value: 'ORDER_PLACING', label: 'ORDER_PLACING (sending to Upstox)' },
+  { value: 'ORDER_PLACED', label: 'ORDER_PLACED (Upstox accepted)' },
+  { value: 'ORDER_STATUS', label: 'ORDER_STATUS (status change)' },
+  { value: 'ORDER_FILLED', label: 'ORDER_FILLED' },
+  { value: 'ORDER_REJECTED', label: 'ORDER_REJECTED' },
+  { value: 'ORDER_TIMEOUT', label: 'ORDER_TIMEOUT' },
+  { value: 'ORDER_CANCEL', label: 'ORDER_CANCEL' },
+  { value: 'ORDER_ADOPTED', label: 'ORDER_ADOPTED (late fill)' },
+  { value: 'SAFETY_CHECK', label: 'SAFETY_CHECK' },
+  { value: 'PRICE_CORRECTED', label: 'PRICE_CORRECTED' },
+  { value: 'RECONCILE', label: 'RECONCILE (Upstox vs DB)' },
+  { value: 'MODE_TOGGLE', label: 'MODE_TOGGLE (live/paper)' },
 ];
 
 const ScalpingAuditLog = () => {
@@ -111,7 +125,7 @@ const ScalpingAuditLog = () => {
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Nifty Audit Log</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Decision audit — SKIP, ENTER, ADD_LOT, PLAN_B, TARGET_HIT, EXIT and more
+          Every step the system takes: why it bought or sold, each Upstox order step, safety checks and reconcile. Expand a row to read what it was thinking.
         </p>
       </div>
 

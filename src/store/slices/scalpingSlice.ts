@@ -204,7 +204,20 @@ export type AuditAction =
   | "CHAIN_SYNC"
   | "HEDGING_SYNC"
   | "LIVE_ORDER_FAIL"
-  | "CANNOT_ADD_LOT";
+  | "CANNOT_ADD_LOT"
+  | "ENTRY_ATTEMPT"
+  | "EXIT_DECISION"
+  | "ORDER_PLACING"
+  | "ORDER_PLACED"
+  | "ORDER_STATUS"
+  | "ORDER_FILLED"
+  | "ORDER_REJECTED"
+  | "ORDER_TIMEOUT"
+  | "ORDER_CANCEL"
+  | "ORDER_ADOPTED"
+  | "SAFETY_CHECK"
+  | "PRICE_CORRECTED"
+  | "MODE_TOGGLE";
 
 export interface AuditLogEntry {
   id: string;

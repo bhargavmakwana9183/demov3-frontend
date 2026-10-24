@@ -27,6 +27,38 @@ const ACTION_VARIANT: Record<
   PARTIAL: 'outline',
   RECONCILE: 'outline',
   HOLD: 'secondary',
+  ENTRY_ATTEMPT: 'default',
+  ENTRY_FILLED: 'default',
+  EXIT_DECISION: 'destructive',
+  TARGET_HIT: 'default',
+  ORDER_PLACING: 'outline',
+  ORDER_PLACED: 'outline',
+  ORDER_STATUS: 'secondary',
+  ORDER_FILLED: 'default',
+  ORDER_REJECTED: 'destructive',
+  ORDER_TIMEOUT: 'destructive',
+  ORDER_CANCEL: 'secondary',
+  ORDER_ADOPTED: 'default',
+  SAFETY_CHECK: 'secondary',
+  PRICE_CORRECTED: 'outline',
+  MODE_TOGGLE: 'outline',
+  LIVE_ORDER_FAIL: 'destructive',
+};
+
+const getThinking = (log: AuditLogEntry): string | null => {
+  const t = (log.metadata as Record<string, unknown> | null | undefined)
+    ?.thinking;
+  return typeof t === 'string' && t.trim() ? t : null;
+};
+
+/** Metadata without the thinking text, which is shown as readable prose. */
+const metadataWithoutThinking = (log: AuditLogEntry) => {
+  if (!log.metadata) return null;
+  const { thinking: _thinking, ...rest } = log.metadata as Record<
+    string,
+    unknown
+  >;
+  return Object.keys(rest).length > 0 ? rest : null;
 };
 
 const formatReason = (reason?: string | null) =>
@@ -62,8 +94,16 @@ const AuditLogRow = ({ log }: { log: AuditLogEntry }) => {
             {log.action}
           </Badge>
         </TableCell>
-        <TableCell className="text-sm max-w-[200px] truncate">
-          {formatReason(log.reason)}
+        <TableCell className="text-sm max-w-[360px]">
+          <div className="truncate">{formatReason(log.reason)}</div>
+          {getThinking(log) && (
+            <div
+              className="text-xs text-muted-foreground line-clamp-2 mt-0.5"
+              title={getThinking(log) ?? undefined}
+            >
+              {getThinking(log)}
+            </div>
+          )}
         </TableCell>
         <TableCell className="text-sm">{log.signal ?? '—'}</TableCell>
         <TableCell className="text-sm text-muted-foreground">
@@ -96,6 +136,14 @@ const AuditLogRow = ({ log }: { log: AuditLogEntry }) => {
         <TableRow className="bg-muted/20 hover:bg-muted/20">
           <TableCell colSpan={8} className="py-3">
             <div className="text-xs space-y-2 font-mono">
+              {getThinking(log) && (
+                <p className="font-sans text-sm rounded-md border border-border bg-card p-3 whitespace-pre-wrap">
+                  <span className="text-muted-foreground font-medium">
+                    What the system was thinking:{' '}
+                  </span>
+                  {getThinking(log)}
+                </p>
+              )}
               {log.instrument_key && (
                 <p>
                   <span className="text-muted-foreground">instrument: </span>
@@ -114,10 +162,10 @@ const AuditLogRow = ({ log }: { log: AuditLogEntry }) => {
                   {JSON.stringify(log.config_snapshot)}
                 </p>
               )}
-              {log.metadata && (
-                <p>
-                  <span className="text-muted-foreground">metadata: </span>
-                  {JSON.stringify(log.metadata)}
+              {metadataWithoutThinking(log) && (
+                <p className="break-all">
+                  <span className="text-muted-foreground">details: </span>
+                  {JSON.stringify(metadataWithoutThinking(log))}
                 </p>
               )}
             </div>

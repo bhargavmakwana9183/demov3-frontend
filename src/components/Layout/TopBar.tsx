@@ -45,8 +45,8 @@ export const TopBar = () => {
     try {
       const result = await dispatch(toggleLiveTrading(checked)).unwrap();
       toast.success(result.production ? 'Production ON' : 'Production OFF');
-    } catch {
-      toast.error('Failed to toggle production');
+    } catch (err) {
+      toast.error(typeof err === 'string' ? err : 'Failed to toggle production');
     }
   };
 

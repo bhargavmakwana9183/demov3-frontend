@@ -82,8 +82,8 @@ const Dashboard = () => {
           : 'Production OFF — paper mode',
       );
       dispatch(fetchScalpingStatus());
-    } catch {
-      toast.error('Failed to toggle production');
+    } catch (err) {
+      toast.error(typeof err === 'string' ? err : 'Failed to toggle production');
     }
   };
 
