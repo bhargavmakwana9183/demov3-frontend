@@ -445,7 +445,7 @@ const CurrentPositions = () => {
 
                 {isOpen && position.eodDecision === 'CARRY' && (
                   <p className="text-xs text-muted-foreground">
-                    Marked to carry forward. Target, add-lot, and Plan B still
+                    Marked to carry forward. The stop and trailing exit still
                     run.
                   </p>
                 )}

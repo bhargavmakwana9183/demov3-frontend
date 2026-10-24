@@ -5,9 +5,22 @@ export const exitReasonVariant = (
   reason?: string | null,
 ): "default" | "secondary" | "destructive" | "outline" => {
   if (!reason) return "outline";
-  if (reason.includes("TARGET")) return "default";
-  if (reason.includes("STOP") || reason.includes("MAX_LOSS")) return "destructive";
-  if (reason.includes("EOD") || reason.includes("TIME")) return "secondary";
+  if (reason.includes("TARGET") || reason.includes("TRAIL_PROFIT")) return "default";
+  if (
+    reason.includes("STOP") ||
+    reason.includes("MAX_LOSS") ||
+    reason.includes("SOFT_NET_LOSS")
+  ) {
+    return "destructive";
+  }
+  if (
+    reason.includes("EOD") ||
+    reason.includes("TIME") ||
+    reason.includes("FLIP") ||
+    reason.includes("NO_FOLLOW")
+  ) {
+    return "secondary";
+  }
   return "outline";
 };
 

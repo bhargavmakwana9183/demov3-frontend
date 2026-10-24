@@ -68,6 +68,13 @@ export interface NiftyScalpConfigSnapshot {
   enable_plan_b: boolean;
   enable_overnight_carry: boolean;
   paper_balance: number;
+  stop_points?: number;
+  trail_points?: number;
+  trail_floor_rs?: number;
+  profit_cap_rs?: number;
+  daily_max_loss_rs?: number;
+  daily_profit_lock_rs?: number;
+  daily_max_trades?: number;
 }
 
 /** Normalized status used by UI (mapped from /nifty-scalp/status) */
@@ -354,6 +361,13 @@ const mapNiftyStatus = (raw: RawNiftyStatus): ScalpingSystemStatus => {
       enable_plan_b: raw.config?.enable_plan_b !== false,
       enable_overnight_carry: raw.config?.enable_overnight_carry !== false,
       paper_balance: Number(raw.config?.paper_balance ?? 0),
+      stop_points: raw.config?.stop_points,
+      trail_points: raw.config?.trail_points,
+      trail_floor_rs: raw.config?.trail_floor_rs,
+      profit_cap_rs: raw.config?.profit_cap_rs,
+      daily_max_loss_rs: raw.config?.daily_max_loss_rs,
+      daily_profit_lock_rs: raw.config?.daily_profit_lock_rs,
+      daily_max_trades: raw.config?.daily_max_trades,
     },
     trade: raw.trade ?? null,
     position: raw.position ?? null,

@@ -75,8 +75,8 @@ export const PlaceOrderModal = ({
           : `Paper BUY @ ₹${Number(fill).toFixed(2)} — engine managing`,
         {
           description: target
-            ? `Target ≈ ₹${Number(target).toFixed(2)} · Plan B / add-lot active`
-            : 'Target / Plan B / add-lot follow Nifty engine',
+            ? `Trail arms near ₹${Number(target).toFixed(2)} · stop and trailing exit active`
+            : 'Stop and trailing exit follow the Nifty engine',
         },
       );
       onOpenChange(false);
@@ -106,8 +106,8 @@ export const PlaceOrderModal = ({
           <DialogDescription>
             {stock.trading_symbol} · LTP ₹{ltp.toFixed(2)} · lot {lotSize}
             <br />
-            Opens a Nifty scalp trade the engine will manage (target, add-lot,
-            Plan B).{' '}
+            Opens a Nifty scalp trade the engine will manage (stop and
+            trailing exit).{' '}
             {production ? (
               <span className="text-destructive font-medium">
                 Production ON — real Upstox MARKET BUY

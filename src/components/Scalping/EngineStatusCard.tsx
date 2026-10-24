@@ -121,11 +121,26 @@ export const EngineStatusCard = ({ status }: EngineStatusCardProps) => {
         <div className="rounded-lg border border-border p-3 text-sm space-y-1">
           <p className="font-medium">Config</p>
           <p className="text-muted-foreground">
-            Target ₹{status.config.target_profit_rs} · Add lot −
-            {status.config.add_lot_points} pts · Plan B{' '}
-            {status.config.enable_plan_b ? 'ON' : 'OFF'} · Overnight{' '}
+            1 lot · Trail arms at ₹{status.config.target_profit_rs}
+            {status.config.trail_points != null
+              ? ` · trail ${status.config.trail_points} pts`
+              : ''}
+            {status.config.profit_cap_rs != null
+              ? ` · cap ₹${status.config.profit_cap_rs}`
+              : ''}
+            {status.config.stop_points != null
+              ? ` · stop −${status.config.stop_points} pts`
+              : ''}
+            {' · '}Overnight{' '}
             {status.config.enable_overnight_carry ? 'ON' : 'OFF'}
           </p>
+          {status.config.daily_max_loss_rs != null && (
+            <p className="text-muted-foreground">
+              Day: stop at −₹{status.config.daily_max_loss_rs}, lock at +₹
+              {status.config.daily_profit_lock_rs}, max{' '}
+              {status.config.daily_max_trades} trades
+            </p>
+          )}
         </div>
 
         <div className="flex items-center gap-2 pt-1">
