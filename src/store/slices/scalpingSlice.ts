@@ -71,6 +71,8 @@ export interface NiftyScalpConfigSnapshot {
   stop_points?: number;
   trail_points?: number;
   trail_floor_rs?: number;
+  trail_arm_rs?: number;
+  breakeven_arm_rs?: number;
   profit_cap_rs?: number;
   daily_max_loss_rs?: number;
   daily_profit_lock_rs?: number;
@@ -217,7 +219,8 @@ export type AuditAction =
   | "ORDER_ADOPTED"
   | "SAFETY_CHECK"
   | "PRICE_CORRECTED"
-  | "MODE_TOGGLE";
+  | "MODE_TOGGLE"
+  | "STOP_UPDATED";
 
 export interface AuditLogEntry {
   id: string;
@@ -377,6 +380,8 @@ const mapNiftyStatus = (raw: RawNiftyStatus): ScalpingSystemStatus => {
       stop_points: raw.config?.stop_points,
       trail_points: raw.config?.trail_points,
       trail_floor_rs: raw.config?.trail_floor_rs,
+      trail_arm_rs: raw.config?.trail_arm_rs,
+      breakeven_arm_rs: raw.config?.breakeven_arm_rs,
       profit_cap_rs: raw.config?.profit_cap_rs,
       daily_max_loss_rs: raw.config?.daily_max_loss_rs,
       daily_profit_lock_rs: raw.config?.daily_profit_lock_rs,

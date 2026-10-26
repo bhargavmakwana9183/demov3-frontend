@@ -121,9 +121,18 @@ export const EngineStatusCard = ({ status }: EngineStatusCardProps) => {
         <div className="rounded-lg border border-border p-3 text-sm space-y-1">
           <p className="font-medium">Config</p>
           <p className="text-muted-foreground">
-            1 lot · Trail arms at ₹{status.config.target_profit_rs}
+            1 lot
+            {status.config.breakeven_arm_rs != null
+              ? ` · breakeven lock at +₹${status.config.breakeven_arm_rs}`
+              : ''}
+            {' · '}Trail arms at +₹
+            {status.config.trail_arm_rs ?? status.config.target_profit_rs}
             {status.config.trail_points != null
-              ? ` · trail ${status.config.trail_points} pts`
+              ? ` (peak − ${status.config.trail_points} pts${
+                  status.config.trail_floor_rs != null
+                    ? `, keeps ≥ +₹${status.config.trail_floor_rs}`
+                    : ''
+                })`
               : ''}
             {status.config.profit_cap_rs != null
               ? ` · cap ₹${status.config.profit_cap_rs}`

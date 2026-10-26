@@ -42,6 +42,7 @@ const ACTION_VARIANT: Record<
   SAFETY_CHECK: 'secondary',
   PRICE_CORRECTED: 'outline',
   MODE_TOGGLE: 'outline',
+  STOP_UPDATED: 'default',
   LIVE_ORDER_FAIL: 'destructive',
 };
 

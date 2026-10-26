@@ -48,6 +48,7 @@ const ACTION_OPTIONS = [
   { value: 'LIVE_ORDER_FAIL', label: 'LIVE_ORDER_FAIL' },
   { value: 'ENTRY_ATTEMPT', label: 'ENTRY_ATTEMPT (why it bought)' },
   { value: 'EXIT_DECISION', label: 'EXIT_DECISION (why it sold)' },
+  { value: 'STOP_UPDATED', label: 'STOP_UPDATED (stop-loss moved)' },
   { value: 'ORDER_PLACING', label: 'ORDER_PLACING (sending to Upstox)' },
   { value: 'ORDER_PLACED', label: 'ORDER_PLACED (Upstox accepted)' },
   { value: 'ORDER_STATUS', label: 'ORDER_STATUS (status change)' },
