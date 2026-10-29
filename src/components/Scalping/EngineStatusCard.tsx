@@ -123,7 +123,11 @@ export const EngineStatusCard = ({ status }: EngineStatusCardProps) => {
           <p className="text-muted-foreground">
             1 lot
             {status.config.breakeven_arm_rs != null
-              ? ` · breakeven lock at +₹${status.config.breakeven_arm_rs}`
+              ? ` · breakeven lock at +₹${status.config.breakeven_arm_rs} (1m close${
+                  status.config.breakeven_fast_drop_points != null
+                    ? `, or −${status.config.breakeven_fast_drop_points} pts fast`
+                    : ''
+                })`
               : ''}
             {' · '}Trail arms at +₹
             {status.config.trail_arm_rs ?? status.config.target_profit_rs}
@@ -148,6 +152,9 @@ export const EngineStatusCard = ({ status }: EngineStatusCardProps) => {
               Day: stop at −₹{status.config.daily_max_loss_rs}, lock at +₹
               {status.config.daily_profit_lock_rs}, max{' '}
               {status.config.daily_max_trades} trades
+              {status.config.scratch_rs != null
+                ? ` · scratch ±₹${status.config.scratch_rs} is not a loss`
+                : ''}
             </p>
           )}
         </div>

@@ -73,6 +73,8 @@ export interface NiftyScalpConfigSnapshot {
   trail_floor_rs?: number;
   trail_arm_rs?: number;
   breakeven_arm_rs?: number;
+  breakeven_fast_drop_points?: number;
+  scratch_rs?: number;
   profit_cap_rs?: number;
   daily_max_loss_rs?: number;
   daily_profit_lock_rs?: number;
@@ -382,6 +384,8 @@ const mapNiftyStatus = (raw: RawNiftyStatus): ScalpingSystemStatus => {
       trail_floor_rs: raw.config?.trail_floor_rs,
       trail_arm_rs: raw.config?.trail_arm_rs,
       breakeven_arm_rs: raw.config?.breakeven_arm_rs,
+      breakeven_fast_drop_points: raw.config?.breakeven_fast_drop_points,
+      scratch_rs: raw.config?.scratch_rs,
       profit_cap_rs: raw.config?.profit_cap_rs,
       daily_max_loss_rs: raw.config?.daily_max_loss_rs,
       daily_profit_lock_rs: raw.config?.daily_profit_lock_rs,
