@@ -91,6 +91,10 @@ export interface ScalpingSystemStatus {
   production: boolean;
   balance: number;
   expiry: string | null;
+  nearestExpiry?: string | null;
+  tradeExpiry?: string | null;
+  subscribeExpiries?: string[];
+  isExpiryDay?: boolean;
   hedgingCount: number;
   openPosition: boolean;
   engineState: string;
@@ -320,6 +324,10 @@ type RawNiftyStatus = {
   config?: Partial<NiftyScalpConfigSnapshot> & { mode?: string; is_active?: boolean };
   balance?: number;
   expiry?: string | null;
+  nearestExpiry?: string | null;
+  tradeExpiry?: string | null;
+  subscribeExpiries?: string[];
+  isExpiryDay?: boolean;
   hedgingCount?: number;
   position?: Record<string, unknown> | null;
   trade?: NiftyTradeSnapshot | null;
@@ -367,7 +375,11 @@ const mapNiftyStatus = (raw: RawNiftyStatus): ScalpingSystemStatus => {
     liveTradingEnabled: production,
     production,
     balance: Number(raw.balance ?? raw.config?.paper_balance ?? 0),
-    expiry: raw.expiry ?? null,
+    expiry: raw.tradeExpiry ?? raw.expiry ?? null,
+    nearestExpiry: raw.nearestExpiry ?? null,
+    tradeExpiry: raw.tradeExpiry ?? raw.expiry ?? null,
+    subscribeExpiries: raw.subscribeExpiries ?? [],
+    isExpiryDay: Boolean(raw.isExpiryDay),
     hedgingCount: Number(raw.hedgingCount ?? 0),
     openPosition,
     engineState,

@@ -67,7 +67,12 @@ export const EngineStatusCard = ({ status }: EngineStatusCardProps) => {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Expiry</span>
-          <span className="font-medium">{status.expiry || '—'}</span>
+          <span className="font-medium text-right">
+            {status.expiry || '—'}
+            {status.isExpiryDay
+              ? ` · next week (skip ${status.nearestExpiry})`
+              : ''}
+          </span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Hedging options</span>

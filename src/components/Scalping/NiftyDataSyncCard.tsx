@@ -14,6 +14,9 @@ type ChainResult = {
 
 type HedgingResult = {
   expiry?: string | null;
+  tradeExpiry?: string | null;
+  subscribeExpiries?: string[];
+  isExpiryDay?: boolean;
   inserted?: number;
   skipped?: number;
   deleted?: number;
@@ -44,7 +47,11 @@ export const NiftyDataSyncCard = ({ onSyncComplete }: NiftyDataSyncCardProps) =>
           ? `Chain: +${chain.inserted ?? 0} new, ${chain.skipped ?? 0} skipped`
           : null,
         hedging
-          ? `Hedging (${hedging.expiry ?? 'expiry'}): +${hedging.inserted ?? 0} new, ${hedging.skipped ?? 0} skipped`
+          ? `Hedging (${hedging.tradeExpiry ?? hedging.expiry ?? 'expiry'}${
+              hedging.subscribeExpiries?.length
+                ? ` feed ${hedging.subscribeExpiries.join(', ')}`
+                : ''
+            }): +${hedging.inserted ?? 0} new, ${hedging.skipped ?? 0} skipped`
           : null,
       ]
         .filter(Boolean)
