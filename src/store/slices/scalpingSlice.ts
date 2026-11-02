@@ -68,6 +68,9 @@ export interface NiftyScalpConfigSnapshot {
   enable_plan_b: boolean;
   enable_overnight_carry: boolean;
   paper_balance: number;
+  max_lots?: number;
+  max_extension_pct?: number;
+  soft_loss_rs?: number;
   stop_points?: number;
   trail_points?: number;
   trail_floor_rs?: number;
@@ -391,6 +394,9 @@ const mapNiftyStatus = (raw: RawNiftyStatus): ScalpingSystemStatus => {
       enable_plan_b: raw.config?.enable_plan_b !== false,
       enable_overnight_carry: raw.config?.enable_overnight_carry !== false,
       paper_balance: Number(raw.config?.paper_balance ?? 0),
+      max_lots: raw.config?.max_lots,
+      max_extension_pct: raw.config?.max_extension_pct,
+      soft_loss_rs: raw.config?.soft_loss_rs,
       stop_points: raw.config?.stop_points,
       trail_points: raw.config?.trail_points,
       trail_floor_rs: raw.config?.trail_floor_rs,

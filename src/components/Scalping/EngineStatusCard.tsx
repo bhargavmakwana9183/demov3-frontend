@@ -126,28 +126,19 @@ export const EngineStatusCard = ({ status }: EngineStatusCardProps) => {
         <div className="rounded-lg border border-border p-3 text-sm space-y-1">
           <p className="font-medium">Config</p>
           <p className="text-muted-foreground">
-            1 lot
-            {status.config.breakeven_arm_rs != null
-              ? ` · breakeven lock at +₹${status.config.breakeven_arm_rs} (1m close${
-                  status.config.breakeven_fast_drop_points != null
-                    ? `, or −${status.config.breakeven_fast_drop_points} pts fast`
-                    : ''
-                })`
-              : ''}
-            {' · '}Trail arms at +₹
+            Scale-in 1→2→3→4 lots every −
+            {status.config.add_lot_points ?? 10} pts vs avg
+            {' · '}flatten if strategy balance cannot fund the next add
+            {' · '}trail from charges +₹
             {status.config.trail_arm_rs ?? status.config.target_profit_rs}
             {status.config.trail_points != null
-              ? ` (peak − ${status.config.trail_points} pts${
-                  status.config.trail_floor_rs != null
-                    ? `, keeps ≥ +₹${status.config.trail_floor_rs}`
-                    : ''
-                })`
+              ? ` (peak − ${status.config.trail_points} pts, floor +₹${status.config.trail_floor_rs ?? status.config.trail_arm_rs ?? 200})`
               : ''}
-            {status.config.profit_cap_rs != null
-              ? ` · cap ₹${status.config.profit_cap_rs}`
+            {status.config.soft_loss_rs != null
+              ? ` · trade max loss ₹${status.config.soft_loss_rs}`
               : ''}
-            {status.config.stop_points != null
-              ? ` · stop −${status.config.stop_points} pts`
+            {status.config.max_extension_pct != null
+              ? ` · chase ≤ ${(status.config.max_extension_pct * 100).toFixed(0)}%`
               : ''}
             {' · '}Overnight{' '}
             {status.config.enable_overnight_carry ? 'ON' : 'OFF'}
